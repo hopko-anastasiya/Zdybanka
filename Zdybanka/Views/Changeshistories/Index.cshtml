@@ -1,0 +1,47 @@
+﻿@model IEnumerable<Zdybanka.Models.Changeshistory>
+
+@{
+    ViewData["Title"] = "Changes History";
+}
+
+<h1>Changes History</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Changedata)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Changedat)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Event)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Changedata)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Changedat)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Event.Id)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
