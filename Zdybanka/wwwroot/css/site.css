@@ -1,5 +1,10 @@
-html {
-  font-size: 14px;
+:root{
+  --btn-gradient: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+  --text-color: #333;
+}
+
+*{
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 @media (min-width: 768px) {
@@ -15,25 +20,115 @@ html {
 html {
   position: relative;
   min-height: 100%;
+  background-color: #f9f2f795;
 }
 
 body {
-  margin-bottom: 60px;
+  background-color: transparent;
 }
 
-.nav-bar {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
+.content-wrapper {
+  margin-top: 50px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+
 }
 
-.nav-bar li a {
-    font-size: 25px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 500;
-    color: midnightblue;
-    text-decoration-style: solid;
-    text-decoration-color: #e5e6e6;
+.container-fluid {
+  background-color: transparent;
+}
+
+.my-nav-pannel{
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+  border-bottom: 1px solid #dee2e6;
+  padding: 20px 50px;
+  background-color: #fff;
+}
+
+.my-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.my-title-icon {
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  padding: 12px;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  color: white;
+}
+
+.my-title-icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+.my-title-info a {
+  text-decoration: none;
+  color: inherit;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+
+.my-title-info span {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.my-title-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-nav {
+  margin-top: 5px;
+}
+
+.my-nav ul {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+  margin: 0px !important;
+}
+
+.my-nav-item a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 20px;
+  text-decoration: none;
+  color: var(--tex);
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-weight: 400;
+}
+
+.my-nav-item a svg {
+  width: 25px;
+  height: 25px;
+}
+
+.my-nav-item a.active {
+  background: var(--btn-gradient);
+  color: #fff;
+}
+.my-nav-item a:not(.active):hover {
+  background-color: #f3f4f6;
+}
+
+.my-main {
+  padding: 40px;
 }

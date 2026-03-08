@@ -1,14 +1,13 @@
 ﻿@model IEnumerable<Zdybanka.Models.Event>
 
 @{
-    ViewData["Title"] = "Events";
+    ViewData["Title"] = "Події";
 }
 
-<h1>Events</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="d-flex align-items-center mb-3">
+    <h1 class="mb-0">Події</h1>
+    <a asp-action="Create" class="btn btn-primary ms-3" title="Створити нову">+</a>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -64,18 +63,18 @@
                 @Html.DisplayFor(modelItem => item.Updatedat)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Category.Id)
+                @Html.DisplayFor(modelItem => item.Category.Categoryname)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Organization.Id)
+                @Html.DisplayFor(modelItem => item.Organization.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Status.Id)
+                @Html.DisplayFor(modelItem => item.Status.Statusname)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
             </td>
         </tr>
 }

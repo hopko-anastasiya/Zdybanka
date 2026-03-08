@@ -1,35 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Головна";
 }
 
-<h1 class="display-4">Welcome</h1>
-<ul class="nav-bar">
-    <li>
-        <a href="~/Organizations">Organization</a>
-    </li>
-    <li>
-        <a href="~/Changeshistories">Changes history</a>
-    </li>
-    <li>
-        <a href="~/Eventcategories">Event category</a>
-    </li>
-    <li>
-        <a href="~/Events">Events</a>
-    </li>
-    <li>
-        <a href="~/Eventstatus">Event status</a>
-    </li>
-    <li>
-        <a href="~/Organizationstatus">Organization status</a>
-    </li>
-    <li>
-        <a href="~/Registrations">Registrations</a>
-    </li>
-    <li>
-        <a href="~/Userfavorites">User favorites</a>
-    </li>
-    <li>
-        <a href="~/Users">Users</a>
-    </li>
-</ul>
+<h1 class="display-4">Ласкаво просимо</h1>
+
+<div class="mb-4">
+    <a asp-controller="User_interface" asp-action="Index">Інтерфейс користувача</a> |
+    <a asp-controller="Admin_interface" asp-action="Index">Інтерфейс адміністратора</a> |
+    <a asp-controller="Organization_interface" asp-action="Index">Інтерфейс організації</a>
+</div>
 

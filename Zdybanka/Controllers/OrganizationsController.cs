@@ -47,7 +47,7 @@ namespace Zdybanka.Controllers
         // GET: Organizations/Create
         public IActionResult Create()
         {
-            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Id");
+            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Statusname");
             return View();
         }
 
@@ -64,7 +64,7 @@ namespace Zdybanka.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Id", organization.Statusid);
+            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Statusname", organization.Statusid);
             return View(organization);
         }
 
@@ -81,7 +81,7 @@ namespace Zdybanka.Controllers
             {
                 return NotFound();
             }
-            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Id", organization.Statusid);
+            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Statusname", organization.Statusid);
             return View(organization);
         }
 
@@ -119,7 +119,7 @@ namespace Zdybanka.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Id", organization.Statusid);
+            ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Statusname", organization.Statusid);
             return View(organization);
         }
 

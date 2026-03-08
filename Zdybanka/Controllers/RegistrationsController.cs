@@ -48,8 +48,10 @@ namespace Zdybanka.Controllers
         // GET: Registrations/Create
         public IActionResult Create()
         {
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id");
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id");
+            var allowedEvents = _context.Events.Include(e => e.Status)
+                .Where(e => e.Status == null || (e.Status.Statusname != "Проведена" && e.Status.Statusname != "Відмінена"));
+            ViewData["Eventid"] = new SelectList(allowedEvents, "Id", "Title");
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname");
             return View();
         }
 
@@ -60,69 +62,22 @@ namespace Zdybanka.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Userid,Eventid,Registrationdate")] Registration registration)
         {
+            var selectedEvent = await _context.Events.Include(e => e.Status).FirstOrDefaultAsync(e => e.Id == registration.Eventid);
+            if (selectedEvent?.Status != null && (selectedEvent.Status.Statusname == "Проведена" || selectedEvent.Status.Statusname == "Відмінена"))
+            {
+                ModelState.AddModelError("Eventid", "Неможливо зареєструватися на подію зі статусом '" + selectedEvent.Status.Statusname + "'.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(registration);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", registration.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", registration.Userid);
-            return View(registration);
-        }
-
-        // GET: Registrations/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var registration = await _context.Registrations.FindAsync(id);
-            if (registration == null)
-            {
-                return NotFound();
-            }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", registration.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", registration.Userid);
-            return View(registration);
-        }
-
-        // POST: Registrations/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Userid,Eventid,Registrationdate")] Registration registration)
-        {
-            if (id != registration.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(registration);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RegistrationExists(registration.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", registration.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", registration.Userid);
+            var allowedEvents = _context.Events.Include(e => e.Status)
+                .Where(e => e.Status == null || (e.Status.Statusname != "Проведена" && e.Status.Statusname != "Відмінена"));
+            ViewData["Eventid"] = new SelectList(allowedEvents, "Id", "Title", registration.Eventid);
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", registration.Userid);
             return View(registration);
         }
 

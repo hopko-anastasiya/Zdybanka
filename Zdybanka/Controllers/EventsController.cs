@@ -49,9 +49,11 @@ namespace Zdybanka.Controllers
         // GET: Events/Create
         public IActionResult Create()
         {
-            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Id");
-            ViewData["Organizationid"] = new SelectList(_context.Organizations, "Id", "Id");
-            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Id");
+            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Categoryname");
+
+            var verifiedOrganizations = _context.Organizations.Include(o => o.Status).Where(o => o.Status.Statusname == "Верифікована");
+            ViewData["Organizationid"] = new SelectList(verifiedOrganizations, "Id", "Name");
+            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Statusname");
             return View();
         }
 
@@ -62,15 +64,23 @@ namespace Zdybanka.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Organizationid,Categoryid,Statusid,Title,Location,Description,Eventdate,Createdat,Updatedat")] Event _event)
         {
+            var organization = await _context.Organizations.Include(o => o.Status).FirstOrDefaultAsync(o => o.Id == _event.Organizationid);
+
+            // 2. Перевірка: чи організація верифікована
+            if (organization == null || organization.Status.Statusname != "Верифікована")
+            {
+                ModelState.AddModelError("Organizationid", "Тільки верифіковані організації можуть створювати події.");
+            }
             if (ModelState.IsValid)
             {
                 _context.Add(_event);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Id", _event.Categoryid);
-            ViewData["Organizationid"] = new SelectList(_context.Organizations, "Id", "Id", _event.Organizationid);
-            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Id", _event.Statusid);
+            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Categoryname", _event.Categoryid);
+            var verifiedOrgs = _context.Organizations.Include(o => o.Status).Where(o => o.Status.Statusname == "Верифікована");
+            ViewData["Organizationid"] = new SelectList(verifiedOrgs, "Id", "Name", _event.Organizationid);
+            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Statusname", _event.Statusid);
             return View(_event);
         }
 
@@ -87,9 +97,10 @@ namespace Zdybanka.Controllers
             {
                 return NotFound();
             }
-            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Id", _event.Categoryid);
-            ViewData["Organizationid"] = new SelectList(_context.Organizations, "Id", "Id", _event.Organizationid);
-            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Id", _event.Statusid);
+            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Categoryname", _event.Categoryid);
+            var verifiedOrgs = _context.Organizations.Include(o => o.Status).Where(o => o.Status.Statusname == "Верифікована");
+            ViewData["Organizationid"] = new SelectList(verifiedOrgs, "Id", "Name", _event.Organizationid);
+            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Statusname", _event.Statusid);
             return View(_event);
         }
 
@@ -105,13 +116,31 @@ namespace Zdybanka.Controllers
                 return NotFound();
             }
 
+            var organization = await _context.Organizations.Include(o => o.Status).FirstOrDefaultAsync(o => o.Id == _event.Organizationid);
+            if (organization == null || organization.Status.Statusname != "Верифікована")
+            {
+                ModelState.AddModelError("Organizationid", "Неможливо зберегти зміни: організація не верифікована.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _event.Createdat = _context.Events.AsNoTracking().FirstOrDefault(o => o.Id == id)?.Createdat;
-                    _event.Updatedat = DateTime.Now;
-                    _context.Update(_event);
+                    var existingEvent = await _context.Events.FirstOrDefaultAsync(o => o.Id == id);
+                    if (existingEvent == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingEvent.Organizationid = _event.Organizationid;
+                    existingEvent.Categoryid = _event.Categoryid;
+                    existingEvent.Statusid = _event.Statusid;
+                    existingEvent.Title = _event.Title;
+                    existingEvent.Location = _event.Location;
+                    existingEvent.Description = _event.Description;
+                    existingEvent.Eventdate = _event.Eventdate;
+                    existingEvent.Updatedat = DateTime.Now;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -127,9 +156,10 @@ namespace Zdybanka.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Id", _event.Categoryid);
-            ViewData["Organizationid"] = new SelectList(_context.Organizations, "Id", "Id", _event.Organizationid);
-            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Id", _event.Statusid);
+            ViewData["Categoryid"] = new SelectList(_context.Eventcategories, "Id", "Categoryname", _event.Categoryid);
+            var verifiedOrgs = _context.Organizations.Include(o => o.Status).Where(o => o.Status.Statusname == "Верифікована");
+            ViewData["Organizationid"] = new SelectList(verifiedOrgs, "Id", "Name", _event.Organizationid);
+            ViewData["Statusid"] = new SelectList(_context.Eventstatuses, "Id", "Statusname", _event.Statusid);
             return View(_event);
         }
 

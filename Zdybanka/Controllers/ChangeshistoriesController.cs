@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -13,9 +15,51 @@ namespace Zdybanka.Controllers
     {
         private readonly Lab1Context _context;
 
+        private static readonly Dictionary<string, string> FieldNames = new()
+        {
+            {"Title", "Назва"},
+            {"Location", "Місце проведення"},
+            {"Description", "Опис"},
+            {"Eventdate", "Дата та час події"},
+            {"Organizationid", "Організація"},
+            {"Categoryid", "Категорія"},
+            {"Statusid", "Статус"},
+            {"Createdat", "Дата створення"},
+            {"Updatedat", "Дата оновлення"}
+        };
+
         public ChangeshistoriesController(Lab1Context context)
         {
             _context = context;
+        }
+
+        /// <summary>
+        /// Парсить JSON з Changedata і повертає список читабельних змін.
+        /// </summary>
+        public static List<ChangeEntry> ParseChanges(string? json)
+        {
+            var result = new List<ChangeEntry>();
+            if (string.IsNullOrEmpty(json)) return result;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    if (prop.Name.StartsWith("_")) continue;
+
+                    var label = FieldNames.TryGetValue(prop.Name, out var name) ? name : prop.Name;
+                    var oldVal = prop.Value.TryGetProperty("Old", out var o) ? o.ToString() : "";
+                    var newVal = prop.Value.TryGetProperty("New", out var n) ? n.ToString() : "";
+                    result.Add(new ChangeEntry { Field = label, OldValue = oldVal, NewValue = newVal });
+                }
+            }
+            catch
+            {
+                result.Add(new ChangeEntry { Field = "Дані", OldValue = "", NewValue = json });
+            }
+
+            return result;
         }
 
         // GET: Changeshistories
@@ -43,122 +87,12 @@ namespace Zdybanka.Controllers
 
             return View(changeshistory);
         }
+    }
 
-        // GET: Changeshistories/Create
-        public IActionResult Create()
-        {
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id");
-            return View();
-        }
-
-        // POST: Changeshistories/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Eventid,Changedata,Changedat")] Changeshistory changeshistory)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(changeshistory);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", changeshistory.Eventid);
-            return View(changeshistory);
-        }
-
-        // GET: Changeshistories/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var changeshistory = await _context.Changeshistories.FindAsync(id);
-            if (changeshistory == null)
-            {
-                return NotFound();
-            }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", changeshistory.Eventid);
-            return View(changeshistory);
-        }
-
-        // POST: Changeshistories/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Eventid,Changedata")] Changeshistory changeshistory)
-        {
-            if (id != changeshistory.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    changeshistory.Changedat = _context.Changeshistories.AsNoTracking().FirstOrDefault(o => o.Id == id)?.Changedat;
-                    _context.Update(changeshistory);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ChangeshistoryExists(changeshistory.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", changeshistory.Eventid);
-            return View(changeshistory);
-        }
-
-        // GET: Changeshistories/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var changeshistory = await _context.Changeshistories
-                .Include(c => c.Event)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (changeshistory == null)
-            {
-                return NotFound();
-            }
-
-            return View(changeshistory);
-        }
-
-        // POST: Changeshistories/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var changeshistory = await _context.Changeshistories.FindAsync(id);
-            if (changeshistory != null)
-            {
-                _context.Changeshistories.Remove(changeshistory);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool ChangeshistoryExists(int id)
-        {
-            return _context.Changeshistories.Any(e => e.Id == id);
-        }
+    public class ChangeEntry
+    {
+        public string Field { get; set; } = "";
+        public string OldValue { get; set; } = "";
+        public string NewValue { get; set; } = "";
     }
 }

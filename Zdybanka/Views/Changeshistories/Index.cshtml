@@ -1,20 +1,18 @@
 ﻿@model IEnumerable<Zdybanka.Models.Changeshistory>
+@using Zdybanka.Controllers
 
 @{
-    ViewData["Title"] = "Changes History";
+    ViewData["Title"] = "Історія змін";
 }
 
-<h1>Changes History</h1>
+<h1>Історія змін</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
 </p>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Changedata)
-            </th>
+            <th>Змінені поля</th>
             <th>
                 @Html.DisplayNameFor(model => model.Changedat)
             </th>
@@ -26,20 +24,29 @@
     </thead>
     <tbody>
 @foreach (var item in Model) {
+        var changes = ChangeshistoriesController.ParseChanges(item.Changedata);
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Changedata)
+                @if (changes.Any())
+                {
+                    foreach (var c in changes)
+                    {
+                        <div><strong>@c.Field:</strong> «@c.OldValue» → «@c.NewValue»</div>
+                    }
+                }
+                else
+                {
+                    <em>Немає даних</em>
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Changedat)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Event.Id)
+                @item.Event?.Title
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a>
             </td>
         </tr>
 }

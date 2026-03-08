@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Zdybanka.Models;
 
 namespace Zdybanka.Models;
 
@@ -245,4 +248,73 @@ public partial class Lab1Context : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
-}
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var dateEntries = ChangeTracker.Entries()
+         .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+        foreach (var entry in dateEntries)
+        {
+            foreach (var prop in entry.Properties.Where(p => p.Metadata.ClrType == typeof(DateTime) || p.Metadata.ClrType == typeof(DateTime?)))
+            {
+                if (prop.CurrentValue is DateTime dt)
+                {
+                    prop.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                }
+            }
+        }
+
+        // 2. ЛОГУВАННЯ ЗМІН (Тільки для редагування подій - EntityState.Modified)
+        var modifiedEntries = ChangeTracker.Entries()
+            .Where(e => e.Entity is Event && e.State == EntityState.Modified)
+            .ToList();
+
+        var historyRecords = new List<Changeshistory>();
+
+        foreach (var entry in modifiedEntries)
+        {
+            var ev = (Event)entry.Entity;
+            var history = new Changeshistory
+            {
+                Changedat = DateTime.Now,
+                Eventid = ev.Id
+            };
+
+            var changes = new Dictionary<string, object>();
+
+            // Додаємо інформацію про те, що це саме оновлення
+            changes["_Action"] = "Update";
+            changes["_Entity"] = entry.Entity.GetType().Name;
+
+            foreach (var property in entry.Properties)
+            {
+                // Для логу редагування записуємо ТІЛЬКИ ті поля, які реально змінилися
+                if (property.IsModified && property.Metadata.Name != "Updatedat")
+                {
+                    changes[property.Metadata.Name] = new
+                    {
+                        Old = property.OriginalValue,
+                        New = property.CurrentValue
+                    };
+                }
+            }
+
+            // Якщо реально змінених полів немає (наприклад, натиснули "Зберегти" без змін), не створюємо лог
+            if (changes.Count > 2)
+            {
+                history.Changedata = JsonSerializer.Serialize(changes,
+                    new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                historyRecords.Add(history);
+            }
+        }
+
+        if (historyRecords.Any())
+        {
+            this.AddRange(historyRecords);
+        }
+
+        // 3. Збереження
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+    }

@@ -1,13 +1,13 @@
 ﻿@model Zdybanka.Models.Event
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Деталі";
 }
 
-<h1>Details</h1>
+<h1>Деталі</h1>
 
 <div>
-    <h4>Event</h4>
+    <h4>Подія</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
@@ -50,23 +50,23 @@
             @Html.DisplayNameFor(model => model.Category)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category.Id)
+            @Html.DisplayFor(model => model.Category.Categoryname)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Organization)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Organization.Id)
+            @Html.DisplayFor(model => model.Organization.Name)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Status)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status.Id)
+            @Html.DisplayFor(model => model.Status.Statusname)
         </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Редагувати</a> |
+    <a asp-action="Index">Назад до списку</a>
 </div>

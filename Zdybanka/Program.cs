@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Zdybanka.Models;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

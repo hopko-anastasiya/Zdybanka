@@ -1,14 +1,13 @@
 ﻿@model IEnumerable<Zdybanka.Models.Registration>
 
 @{
-    ViewData["Title"] = "Registrations";
+    ViewData["Title"] = "Реєстрації";
 }
 
-<h1>Registrations</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="d-flex align-items-center mb-3">
+    <h1 class="mb-0">Реєстрації</h1>
+    <a asp-action="Create" class="btn btn-primary ms-3" title="Створити нову">+</a>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -31,15 +30,14 @@
                 @Html.DisplayFor(modelItem => item.Registrationdate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Event.Id)
+                @Html.DisplayFor(modelItem => item.Event.Title)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.User.Id)
+                @Html.DisplayFor(modelItem => item.User.Fullname)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
             </td>
         </tr>
 }

@@ -48,8 +48,8 @@ namespace Zdybanka.Controllers
         // GET: Userfavorites/Create
         public IActionResult Create()
         {
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id");
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title");
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname");
             return View();
         }
 
@@ -66,8 +66,8 @@ namespace Zdybanka.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", userfavorite.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", userfavorite.Userid);
+            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title", userfavorite.Eventid);
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", userfavorite.Userid);
             return View(userfavorite);
         }
 
@@ -84,8 +84,8 @@ namespace Zdybanka.Controllers
             {
                 return NotFound();
             }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", userfavorite.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", userfavorite.Userid);
+            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title", userfavorite.Eventid);
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", userfavorite.Userid);
             return View(userfavorite);
         }
 
@@ -121,8 +121,8 @@ namespace Zdybanka.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Id", userfavorite.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Id", userfavorite.Userid);
+            ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title", userfavorite.Eventid);
+            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", userfavorite.Userid);
             return View(userfavorite);
         }
 

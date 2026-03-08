@@ -1,14 +1,13 @@
 ﻿@model IEnumerable<Zdybanka.Models.User>
 
 @{
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "Користувачі";
 }
 
-<h1>Users</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="d-flex align-items-center mb-3">
+    <h1 class="mb-0">Користувачі</h1>
+    <a asp-action="Create" class="btn btn-primary ms-3" title="Створити нового">+</a>
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -37,9 +36,9 @@
                 @Html.DisplayFor(modelItem => item.Createdat)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
             </td>
         </tr>
 }

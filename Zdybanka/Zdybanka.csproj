@@ -20,4 +20,9 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\Admin_interface\" />
+    <Folder Include="Views\Organization_interface\" />
+  </ItemGroup>
+
 </Project>
