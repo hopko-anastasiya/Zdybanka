@@ -6,6 +6,8 @@ namespace Zdybanka.Controllers
 {
     public class HomeController : Controller
     {
+        public const string CurrentRole = "Organization";
+
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(ILogger<HomeController> logger)
@@ -15,7 +17,13 @@ namespace Zdybanka.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return CurrentRole switch
+            {
+                "User" => RedirectToAction("Index", "Events"),
+                "Organization" => RedirectToAction("Profile", "Organizations", new { id = TemporaryIdentity.CurrentOrganizationId }),
+                "Admin" => RedirectToAction("Index", "Organizations"),
+                _ => RedirectToAction("Index", "Events")
+            };
         }
 
         public IActionResult Privacy()

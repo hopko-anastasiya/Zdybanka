@@ -1,0 +1,82 @@
+﻿@model Zdybanka.Models.ViewModels.OrganizationStatisticsViewModel
+@{
+}
+
+<div class="container">
+    <div class="page-info">
+        <h2>Статистика</h2>
+        <span>Аналіз ефективності ваших подій</span>
+    </div>
+
+    <div class="stat-list">
+        <div class="stat card">
+            <div class="stat-info">
+                <h4>Всього подій</h4>
+                <p>@Model.TotalEventsCount</p>
+            </div>
+            <div class="stat-icon events">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+            </div>
+        </div>
+
+        <div class="stat card">
+            <div class="stat-info">
+                <h4>Проведено</h4>
+                <p>@Model.CompletedEventsCount</p>
+            </div>
+            <div class="stat-icon completed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up-icon lucide-trending-up"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg>
+            </div>
+        </div>
+
+        <div class="stat card">
+            <div class="stat-info">
+                <h4>Реєстрацій</h4>
+                <p>@Model.TotalRegistrationsCount</p>
+            </div>
+            <div class="stat-icon registrations">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+        </div>
+
+        <div class="stat card">
+            <div class="stat-info">
+                <h4>Уподобань</h4>
+                <p>@Model.TotalFavoritesCount</p>
+            </div>
+            <div class="stat-icon favorites">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="card top-events">
+        <h3>Найпопулярніші події</h3>
+
+        @if (!Model.TopEventsByRegistrations.Any())
+        {
+            <div>
+                <p>У організації ще немає подій для рейтингу.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var eventItem in Model.TopEventsByRegistrations)
+            {
+                <div class="top-event">
+                    <h4>@eventItem.Title</h4>
+                    <div class="top-event-stats" style="display: flex; gap: 20px;">
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+                            @eventItem.RegistrationsCount
+                        </span>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+                            @eventItem.FavoritesCount
+                        </span>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

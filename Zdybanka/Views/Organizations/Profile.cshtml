@@ -1,0 +1,120 @@
+﻿@model Zdybanka.Models.Organization
+
+@{
+}
+
+<div class="container">
+    <div class="page-info">
+        <h2>Профіль організації</h2>
+        <span>Керуйте інформацією про вашу організацію</span>
+    </div>
+    <div class="card">
+        <div id="profile-view">
+            <div class="profile-first-row">
+                <div class="profile-header">
+                    <div class="profile-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>
+                    </div>
+                    <div class="profile-main-info">
+                        <h4 class="main-info">@Model.Name</h4>
+                        <span class="badge @(Model.Status.Statusname == "Верифікована" ? "bg-success" :
+                                                  Model.Status.Statusname == "Не верифікована" ? "bg-secondary" :
+                                                  Model.Status.Statusname == "Заблокована" ? "bg-danger" : "bg-dark")">
+                            @Model.Status.Statusname
+                        </span>
+                    </div>
+                </div>
+                <a href="#" class="btn-base" id="btn-edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></svg>
+                    Редагувати
+                </a>
+            </div>
+            <div class="profile-second-info">
+                <span class="org-discription">
+                    Опис
+                    <p>@Model.Description</p>
+                </span>
+                <span class="org-email">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></svg>
+                    @Model.Email
+                </span>
+                <span class="org-discription">
+                    Дата створення:
+                    <p>@Model.Createdat?.ToString("dd.MM.yyyy")</p>
+                </span>
+            </div>
+        </div>
+
+        <!-- Edit -->
+        <div id="profile-edit" style="display: none;">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <input type="hidden" name="Statusid" value="@Model.Statusid" />
+                <input type="hidden" name="returnUrl" value="@Url.Action("Profile", new { id = Model.Id })" />
+
+                <div class="profile-first-row">
+                    <div class="profile-header">
+                        <div class="profile-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>
+                        </div>
+                        <div class="profile-main-info">
+                            <input asp-for="Name" class="profile-edit-input profile-edit-name" />
+                            <span class="badge @(Model.Status.Statusname == "Верифікована" ? "bg-success" :
+                                                      Model.Status.Statusname == "Не верифікована" ? "bg-secondary" :
+                                                      Model.Status.Statusname == "Заблокована" ? "bg-danger" : "bg-dark")">
+                                @Model.Status.Statusname
+                            </span>
+                        </div>
+                    </div>
+                    <div class="profile-edit-actions">
+                        <button type="submit" class="btn-base btn-confirm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Зберегти
+                        </button>
+                        <button class="btn-base btn-decline" id="btn-cancel">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            Відхилити
+                        </button>
+                    </div>
+                </div>
+
+                <div class="profile-second-info">
+                    <div class="profile-edit-field">
+                        <label class="profile-edit-label">Опис</label>
+                        <textarea name="Description" class="profile-edit-input profile-edit-textarea">@Model.Description</textarea>
+                    </div>
+                    <div class="profile-edit-field">
+                        <label class="profile-edit-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></svg>
+                            Email
+                        </label>
+                        <input asp-for="Email" class="profile-edit-input" />
+                        <span asp-validation-for="Email" class="profile-edit-error"></span>
+                    </div>
+                    <span class="org-discription">
+                        Дата створення:
+                        <p>@Model.Createdat?.ToString("dd.MM.yyyy")</p>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    document.getElementById('btn-edit').addEventListener('click', function (e) {
+        e.preventDefault();
+        document.getElementById('profile-view').style.display = 'none';
+        document.getElementById('profile-edit').style.display = 'block';
+    });
+
+    document.getElementById('btn-cancel').addEventListener('click', function (e) {
+        e.preventDefault();
+        document.getElementById('profile-edit').style.display = 'none';
+        document.getElementById('profile-view').style.display = 'block';
+    });
+</script>

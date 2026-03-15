@@ -21,7 +21,11 @@ namespace Zdybanka.Controllers
         // GET: Userfavorites
         public async Task<IActionResult> Index()
         {
-            var lab1Context = _context.Userfavorites.Include(u => u.Event).Include(u => u.User);
+            var currentUserId = TemporaryIdentity.CurrentUserId;
+            var lab1Context = _context.Userfavorites
+                .Where(u => u.Userid == currentUserId)
+                .Include(u => u.Event)
+                .Include(u => u.User);
             return View(await lab1Context.ToListAsync());
         }
 
@@ -48,8 +52,9 @@ namespace Zdybanka.Controllers
         // GET: Userfavorites/Create
         public IActionResult Create()
         {
+            var currentUserId = TemporaryIdentity.CurrentUserId;
             ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title");
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname");
+            ViewData["Userid"] = new SelectList(_context.Users.Where(u => u.Id == currentUserId), "Id", "Fullname", currentUserId);
             return View();
         }
 
@@ -60,6 +65,9 @@ namespace Zdybanka.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Userid,Eventid")] Userfavorite userfavorite)
         {
+            var currentUserId = TemporaryIdentity.CurrentUserId;
+            userfavorite.Userid = currentUserId;
+
             if (ModelState.IsValid)
             {
                 _context.Add(userfavorite);
@@ -67,7 +75,7 @@ namespace Zdybanka.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Eventid"] = new SelectList(_context.Events, "Id", "Title", userfavorite.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", userfavorite.Userid);
+            ViewData["Userid"] = new SelectList(_context.Users.Where(u => u.Id == currentUserId), "Id", "Fullname", currentUserId);
             return View(userfavorite);
         }
 

@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="Views\Admin_interface\" />
-    <Folder Include="Views\Organization_interface\" />
   </ItemGroup>
 
 </Project>

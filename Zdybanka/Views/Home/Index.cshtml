@@ -2,11 +2,13 @@
     ViewData["Title"] = "Головна";
 }
 
-<h1 class="display-4">Ласкаво просимо</h1>
-
-<div class="mb-4">
-    <a asp-controller="User_interface" asp-action="Index">Інтерфейс користувача</a> |
-    <a asp-controller="Admin_interface" asp-action="Index">Інтерфейс адміністратора</a> |
-    <a asp-controller="Organization_interface" asp-action="Index">Інтерфейс організації</a>
+<div class="content-wrapper" style="text-align: center; margin-top: 100px;">
+    <h1 class="display-4">Ласкаво просимо до Zdybanka</h1>
+    <p style="margin-bottom: 30px;">Оберіть роль для входу:</p>
+    <div class="mb-4" style="display: flex; gap: 20px; justify-content: center;">
+        <a asp-controller="Home" asp-action="LoginAsUser" class="btn" style="background: var(--btn-gradient); color: #fff; padding: 15px 30px; font-size: 18px; border-radius: 10px;">Користувач</a>
+        <a asp-controller="Home" asp-action="LoginAsOrganization" class="btn" style="background: var(--btn-gradient); color: #fff; padding: 15px 30px; font-size: 18px; border-radius: 10px;">Організація</a>
+        <a asp-controller="Home" asp-action="LoginAsAdmin" class="btn" style="background: var(--btn-gradient); color: #fff; padding: 15px 30px; font-size: 18px; border-radius: 10px;">Адміністратор</a>
+    </div>
 </div>
 

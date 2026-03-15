@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Zdybanka.Models;
+using Zdybanka.Services;
 
 namespace Zdybanka.Controllers
 {
@@ -21,7 +22,11 @@ namespace Zdybanka.Controllers
         // GET: Registrations
         public async Task<IActionResult> Index()
         {
-            var lab1Context = _context.Registrations.Include(r => r.Event).Include(r => r.User);
+            var currentUserId = TemporaryIdentity.CurrentUserId;
+            var lab1Context = _context.Registrations
+                .Where(r => r.Userid == currentUserId)
+                .Include(r => r.Event)
+                .Include(r => r.User);
             return View(await lab1Context.ToListAsync());
         }
 
@@ -46,12 +51,14 @@ namespace Zdybanka.Controllers
         }
 
         // GET: Registrations/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            await EventStatusAutomationService.SynchronizeStatusesAsync(_context);
+            var currentUserId = TemporaryIdentity.CurrentUserId;
             var allowedEvents = _context.Events.Include(e => e.Status)
                 .Where(e => e.Status == null || (e.Status.Statusname != "Проведена" && e.Status.Statusname != "Відмінена"));
             ViewData["Eventid"] = new SelectList(allowedEvents, "Id", "Title");
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname");
+            ViewData["Userid"] = new SelectList(_context.Users.Where(u => u.Id == currentUserId), "Id", "Fullname", currentUserId);
             return View();
         }
 
@@ -62,6 +69,10 @@ namespace Zdybanka.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Userid,Eventid,Registrationdate")] Registration registration)
         {
+            await EventStatusAutomationService.SynchronizeStatusesAsync(_context);
+            var currentUserId = TemporaryIdentity.CurrentUserId;
+            registration.Userid = currentUserId;
+
             var selectedEvent = await _context.Events.Include(e => e.Status).FirstOrDefaultAsync(e => e.Id == registration.Eventid);
             if (selectedEvent?.Status != null && (selectedEvent.Status.Statusname == "Проведена" || selectedEvent.Status.Statusname == "Відмінена"))
             {
@@ -77,7 +88,7 @@ namespace Zdybanka.Controllers
             var allowedEvents = _context.Events.Include(e => e.Status)
                 .Where(e => e.Status == null || (e.Status.Statusname != "Проведена" && e.Status.Statusname != "Відмінена"));
             ViewData["Eventid"] = new SelectList(allowedEvents, "Id", "Title", registration.Eventid);
-            ViewData["Userid"] = new SelectList(_context.Users, "Id", "Fullname", registration.Userid);
+            ViewData["Userid"] = new SelectList(_context.Users.Where(u => u.Id == currentUserId), "Id", "Fullname", currentUserId);
             return View(registration);
         }
 

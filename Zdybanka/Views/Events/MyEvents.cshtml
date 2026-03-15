@@ -1,0 +1,277 @@
+@model Zdybanka.Models.ViewModels.OrganizationEventsViewModel
+
+@{
+    ViewData["Title"] = "Мої події";
+    var organization = Model.Organization;
+    var canCreateEvent = Model.CanCreateEvent;
+    var shouldOpenCreateOverlay = (ViewData["OpenCreateOverlay"] as bool?) == true;
+}
+
+<div class="container">
+    <div class="page-first-row">
+        <div class="page-info">
+            <h2>Мої події</h2>
+            <span>Керуйте подіями вашої організації</span>
+        </div>
+
+        @if (organization != null)
+        {
+            if (canCreateEvent)
+            {
+                <button type="button" class="btn-base btn-confirm" id="open-create-event-dialog">Додати подію</button>
+            }
+            else
+            {
+                <button type="button" class="btn-base" disabled>Додати подію</button>
+            }
+        }
+    </div>
+
+    @if (organization == null)
+{
+    <p>Організацію не знайдено.</p>
+}
+else
+{
+    if (!canCreateEvent)
+    {
+        <p class="events-feedback">Заблоковані або не верифіковані організації не можуть додавати нові події.</p>
+    }
+
+    if (!Model.Events.Any())
+    {
+        <p class="events-feedback">Подій для цієї організації ще немає.</p>
+    }
+    else
+    {
+        <div class="org-events-list">
+            @{
+                var openEditId = ViewData["OpenEditOverlayForEventId"] as int?;
+            }
+            @foreach (var item in Model.Events)
+            {
+                var registrationsCount = Model.RegistrationCountsByEventId.TryGetValue(item.Id, out var count)
+                    ? count
+                    : 0;
+
+                <div class="org-event card">
+                    <div class="org-event-status-category">
+                        <h4 class="main-info">@item.Title</h4>
+                        <span>@item.Status?.Statusname</span>
+                        <span>@item.Category?.Categoryname</span>
+
+                        <div class="event-actions">
+                            <button type="button" onclick="document.getElementById('edit-event-dialog-@item.Id').showModal()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+                            </button>
+                            <form asp-action="DeleteMyEvent" asp-route-id="@item.Id" asp-route-organizationId="@organization!.Id" method="post" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" onclick="return confirm('Видалити подію «@item.Title»?')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" color="red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="org-event-details"> 
+                        <span>
+                            @item.Description
+                        </span>
+                        <span> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                            @item.Location
+                        </span>
+                        <span> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                            @item.Eventdate
+                        </span>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+                            @registrationsCount реєстрацій 
+                        </span>
+                    </div>
+
+                    <div>
+                        <form asp-action="ExportRegistrations" asp-route-id="@item.Id" method="get">
+                            <button type="submit" class="btn-base">Вивантажити список реєстрацій</button>
+                        </form>
+                    </div>
+                </div>
+
+                <dialog id="edit-event-dialog-@item.Id">
+                    <form asp-action="EditMyEvent" asp-route-organizationId="@organization!.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@item.Id" />
+                        <h3>Редагувати подію</h3>
+
+                        <div class="new-event-form">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                            <div class="form-group">
+                                <label class="control-label">Назва</label>
+                                <input type="text" name="Title" value="@item.Title" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Опис</label>
+                                <textarea name="Description" class="form-control">@item.Description</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Дата та час події</label>
+                                <input type="datetime-local" name="Eventdate" value="@item.Eventdate?.ToString("yyyy-MM-ddTHH:mm")" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Місце проведення</label>
+                                <input type="text" name="Location" value="@item.Location" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Категорія</label>
+                                <select name="Categoryid" class="form-control">
+                                    @foreach (var cat in Model.Categories)
+                                    {
+                                        if (cat.Value == item.Categoryid?.ToString())
+                                        {
+                                            <option value="@cat.Value" selected="selected">@cat.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@cat.Value">@cat.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Статус</label>
+                                <select name="Statusid" class="form-control">
+                                    @if (!Model.Statuses.Any(st => st.Value == item.Statusid?.ToString()) && item.Statusid.HasValue && item.Status != null)
+                                    {
+                                        <option value="@item.Statusid" selected="selected">@item.Status.Statusname</option>
+                                    }
+
+                                    @foreach (var st in Model.Statuses)
+                                    {
+                                        if (st.Value == item.Statusid?.ToString())
+                                        {
+                                            <option value="@st.Value" selected="selected">@st.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@st.Value">@st.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-action">
+                            <button type="submit" class="btn-base btn-confirm">Зберегти</button>
+                            <button type="button" class="btn-base btn-decline" onclick="document.getElementById('edit-event-dialog-@item.Id').close()">Скасувати</button>
+                        </div>
+                    </form>
+                </dialog>
+            }
+        </div>
+    }
+
+    if (canCreateEvent)
+    {
+        <dialog id="create-event-dialog">
+            <form asp-action="CreateMyEvent" asp-route-organizationId="@organization.Id" method="post">
+                @Html.AntiForgeryToken()
+                <h3>Створити нову подію</h3>
+
+                <div class="new-event-form">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="NewEvent.Title" class="control-label"></label>
+                        <input asp-for="NewEvent.Title" class="form-control" />
+                        <span asp-validation-for="NewEvent.Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NewEvent.Description" class="control-label"></label>
+                        <textarea asp-for="NewEvent.Description" class="form-control"></textarea>
+                        <span asp-validation-for="NewEvent.Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NewEvent.Eventdate" class="control-label"></label>
+                        <input asp-for="NewEvent.Eventdate" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="NewEvent.Eventdate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NewEvent.Location" class="control-label"></label>
+                        <input asp-for="NewEvent.Location" class="form-control" />
+                        <span asp-validation-for="NewEvent.Location" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="NewEvent.Categoryid" class="control-label"></label>
+                        <select asp-for="NewEvent.Categoryid" class="form-control" asp-items="Model.Categories"></select>
+                        <span asp-validation-for="NewEvent.Categoryid" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-action">
+                    <button type="submit" class="btn-base btn-confirm" id="save-event-btn">Створити подію</button>
+                    <button type="button" id="close-create-event-dialog" class="btn-base btn-decline">Скасувати</button>
+                </div>
+            </form>
+        </dialog>
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const dialog = document.getElementById('create-event-dialog');
+            const openButton = document.getElementById('open-create-event-dialog');
+            const closeButton = document.getElementById('close-create-event-dialog');
+            const shouldOpenCreateOverlay = @((canCreateEvent && shouldOpenCreateOverlay).ToString().ToLowerInvariant());
+
+            if (openButton && dialog && typeof dialog.showModal === 'function') {
+                openButton.addEventListener('click', function () {
+                    dialog.showModal();
+                });
+            }
+
+            if (closeButton && dialog) {
+                closeButton.addEventListener('click', function () {
+                    dialog.close();
+                });
+            }
+
+            if (shouldOpenCreateOverlay && dialog && typeof dialog.showModal === 'function') {
+                dialog.showModal();
+            }
+
+            @if (ViewData["OpenEditOverlayForEventId"] is int editId)
+            {
+                <text>
+                const editDialog = document.getElementById('edit-event-dialog-@editId');
+                if (editDialog && typeof editDialog.showModal === 'function') {
+                    editDialog.showModal();
+                }
+                </text>
+            }
+        })();
+    </script>
+}
+
+<script>
+    document.querySelectorAll('[id^="edit-event-dialog-"]').forEach(function (editDialog) {
+        var dateInput = editDialog.querySelector('input[type="datetime-local"]');
+        if (!dateInput) return;
+
+        editDialog.addEventListener('toggle', function () {
+            if (editDialog.open) {
+                var minDate = new Date(Date.now() - 60 * 60 * 1000);
+                var pad = function (n) { return String(n).padStart(2, '0'); };
+                var minStr = minDate.getFullYear() + '-' + pad(minDate.getMonth() + 1) + '-' + pad(minDate.getDate())
+                    + 'T' + pad(minDate.getHours()) + ':' + pad(minDate.getMinutes());
+                dateInput.min = minStr;
+            }
+        });
+    });
+</script>
+
+</div>
+

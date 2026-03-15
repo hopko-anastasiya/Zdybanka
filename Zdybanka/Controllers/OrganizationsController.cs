@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Zdybanka.Models;
+using Zdybanka.Models.ViewModels;
+using Zdybanka.Services;
 
 namespace Zdybanka.Controllers
 {
@@ -20,6 +22,12 @@ namespace Zdybanka.Controllers
 
         // GET: Organizations
         public async Task<IActionResult> Index()
+        {
+            var lab1Context = _context.Organizations.Include(o => o.Status);
+            return View(await lab1Context.ToListAsync());
+        }
+
+        public async Task<IActionResult> MyIndex()
         {
             var lab1Context = _context.Organizations.Include(o => o.Status);
             return View(await lab1Context.ToListAsync());
@@ -90,7 +98,7 @@ namespace Zdybanka.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Statusid,Name,Email,Description")] Organization organization)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Statusid,Name,Email,Description")] Organization organization, string? returnUrl = null)
         {
             if (id != organization.Id)
             {
@@ -117,9 +125,13 @@ namespace Zdybanka.Controllers
                         throw;
                     }
                 }
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return Redirect(returnUrl);
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Statusid"] = new SelectList(_context.Organizationstatuses, "Id", "Statusname", organization.Statusid);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
             return View(organization);
         }
 
@@ -160,6 +172,82 @@ namespace Zdybanka.Controllers
         private bool OrganizationExists(int id)
         {
             return _context.Organizations.Any(e => e.Id == id);
+        }
+
+        public async Task<IActionResult> Profile(int? id = null)
+        {
+            var organizationId = id ?? TemporaryIdentity.CurrentOrganizationId;
+
+            var organization = await _context.Organizations.Include(o => o.Status).FirstOrDefaultAsync(m => m.Id == organizationId);
+
+            if (organization == null)
+            {
+                return NotFound();
+            }
+
+            return View(organization);
+        }
+
+        public async Task<IActionResult> Statistics(int? id = null)
+        {
+            var organizationId = id ?? TemporaryIdentity.CurrentOrganizationId;
+
+            await EventStatusAutomationService.SynchronizeStatusesAsync(_context, organizationId);
+
+            var organization = await _context.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == organizationId);
+
+            if (organization == null)
+            {
+                return NotFound();
+            }
+
+            var eventsQuery = _context.Events
+                .AsNoTracking()
+                .Where(e => e.Organizationid == organizationId);
+
+            var totalEventsCount = await eventsQuery.CountAsync();
+
+            var completedEventsCount = await eventsQuery
+                .Where(e => e.Status != null && e.Status.Statusname == "Проведена")
+                .CountAsync();
+
+            var totalRegistrationsCount = await _context.Registrations
+                .AsNoTracking()
+                .Where(r => r.Event != null && r.Event.Organizationid == organizationId)
+                .CountAsync();
+
+            var totalFavoritesCount = await _context.Userfavorites
+                .AsNoTracking()
+                .Where(f => f.Event != null && f.Event.Organizationid == organizationId)
+                .CountAsync();
+
+            var topEvents = await eventsQuery
+                .Select(e => new PopularOrganizationEventViewModel
+                {
+                    EventId = e.Id,
+                    Title = e.Title,
+                    RegistrationsCount = e.Registrations.Count(),
+                    FavoritesCount = e.Userfavorites.Count()
+                })
+                .OrderByDescending(e => e.RegistrationsCount)
+                .ThenBy(e => e.Title)
+                .Take(3)
+                .ToListAsync();
+
+            var viewModel = new OrganizationStatisticsViewModel
+            {
+                OrganizationId = organization.Id,
+                OrganizationName = organization.Name,
+                TotalEventsCount = totalEventsCount,
+                CompletedEventsCount = completedEventsCount,
+                TotalRegistrationsCount = totalRegistrationsCount,
+                TotalFavoritesCount = totalFavoritesCount,
+                TopEventsByRegistrations = topEvents
+            };
+
+            return View(viewModel);
         }
     }
 }
