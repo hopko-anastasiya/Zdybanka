@@ -17,9 +17,9 @@
                     </div>
                     <div class="profile-main-info">
                         <h4 class="main-info">@Model.Name</h4>
-                        <span class="badge @(Model.Status.Statusname == "Верифікована" ? "bg-success" :
-                                                  Model.Status.Statusname == "Не верифікована" ? "bg-secondary" :
-                                                  Model.Status.Statusname == "Заблокована" ? "bg-danger" : "bg-dark")">
+                        <span class="status-badge @(Model.Status.Statusname == "Верифікована" ? "status-planned" :
+                                                  Model.Status.Statusname == "Не верифікована" ? "status-default" :
+                                                  Model.Status.Statusname == "Заблокована" ? "status-cancelled" : "status-default")">
                             @Model.Status.Statusname
                         </span>
                     </div>

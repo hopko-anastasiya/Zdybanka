@@ -57,8 +57,17 @@ else
                 <div class="org-event card">
                     <div class="org-event-status-category">
                         <h4 class="main-info">@item.Title</h4>
-                        <span>@item.Status?.Statusname</span>
-                        <span>@item.Category?.Categoryname</span>
+                        @{
+                            var statusClass = "status-badge status-default";
+                            if (item.Status?.Statusname == "Запланована")
+                                statusClass = "status-badge status-planned";
+                            else if (item.Status?.Statusname == "Відмінена")
+                                statusClass = "status-badge status-cancelled";
+                            else if (item.Status?.Statusname == "Проведена")
+                                statusClass = "status-badge status-completed";
+                        }
+                        <span class="@statusClass">@item.Status?.Statusname</span>
+                        <span class="status-badge">@item.Category?.Categoryname</span>
 
                         <div class="event-actions">
                             <button type="button" class="btn-base btn-edit" onclick="document.getElementById('edit-event-dialog-@item.Id').showModal()">

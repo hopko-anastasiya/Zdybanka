@@ -2,7 +2,7 @@
     --btn-gradient: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
     --text-color: #333;
     --card-color: white;
-    --success: #00c951;
+    --success: #5cce4b;
     --danger: #fb2c36;
     --plain-color: #717182;
     --card-border-color: #0000001a;
@@ -508,15 +508,6 @@ dialog h3 {
     align-items: center;
 }
 
-.org-event-status-category span {
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 8px;
-    width: fit-content;
-    box-shadow: 0 4px 6px -1px #0000001a,0 2px 4px -2px #0000001a;
-    border-radius: 20px;
-    border: 2px solid var(--btn-border-color);
-}
 
 .org-event {
     display: flex;
@@ -765,6 +756,41 @@ dialog h3 {
     .charts-flex {
         flex-direction: column;
     }
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 2px solid var(--btn-border-color);
+    box-shadow: 0 4px 6px -1px #0000001a,0 2px 4px -2px #0000001a;
+}
+
+.status-badge.status-planned {
+    background-color: #dcfce7;
+    color: #00a63e;
+    border: 1px solid #86efac;
+}
+
+.status-badge.status-cancelled {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.status-badge.status-completed {
+    background-color: #dbeafe;
+    color: #155dfc;
+    border: 1px solid #93c5fd;
+}
+
+.status-badge.status-default {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
 }
 
 @media (max-width: 768px) {
