@@ -1,5 +1,13 @@
 ﻿@model Zdybanka.Models.ViewModels.OrganizationStatisticsViewModel
+@using System.Text.Json
 @{
+    var eventsEngagement = Model.EventsEngagement;
+    var chartLabels = eventsEngagement.Select(e => e.Title).ToList();
+    var chartRegistrations = eventsEngagement.Select(e => e.RegistrationsCount).ToList();
+    var chartFavorites = eventsEngagement.Select(e => e.FavoritesCount).ToList();
+    var eventsByStatus = Model.EventsByStatus;
+    var statusChartLabels = eventsByStatus.Select(s => s.StatusName).ToList();
+    var statusChartValues = eventsByStatus.Select(s => s.EventsCount).ToList();
 }
 
 <div class="container">
@@ -79,4 +87,192 @@
             }
         }
     </div>
+
+    <div class="charts-flex">
+        <div class="card engagement-histogram">
+            <h3>Реєстрації та уподобання по подіях</h3>
+
+            @if (!eventsEngagement.Any())
+            {
+                <div>
+                    <p>У організації ще немає подій для побудови гістограми.</p>
+                </div>
+            }
+            else
+            {
+                <div class="engagement-chart-wrapper" id="engagement-chart-wrapper">
+                    <div class="engagement-chart-inner" id="engagement-chart-inner">
+                        <canvas id="organization-engagement-chart" aria-label="Гістограма активності подій" role="img"></canvas>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card status-distribution">
+            <h3>Розподіл подій за статусом</h3>
+
+            @if (!eventsByStatus.Any())
+            {
+                <div>
+                    <p>Немає даних для побудови кругової діаграми.</p>
+                </div>
+            }
+            else
+            {
+                <div class="status-chart-wrapper">
+                    <canvas id="organization-status-chart" aria-label="Кругова діаграма статусів подій" role="img"></canvas>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    @if (eventsEngagement.Any() || eventsByStatus.Any())
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            (() => {
+                const labels = @Html.Raw(JsonSerializer.Serialize(chartLabels));
+                const registrations = @Html.Raw(JsonSerializer.Serialize(chartRegistrations));
+                const favorites = @Html.Raw(JsonSerializer.Serialize(chartFavorites));
+                const statusLabels = @Html.Raw(JsonSerializer.Serialize(statusChartLabels));
+                const statusValues = @Html.Raw(JsonSerializer.Serialize(statusChartValues));
+                const statusPalette = ['#dbeafe', '#dcfce7', '#f3e8ff', '#fce7f3'];
+                const statusBorderPalette = ['#93c5fd', '#86efac', '#d8b4fe', '#f9a8d4'];
+
+                const canvas = document.getElementById('organization-engagement-chart');
+                const chartWrapper = document.getElementById('engagement-chart-wrapper');
+                const chartInner = document.getElementById('engagement-chart-inner');
+                if (canvas) {
+                    if (chartWrapper && chartInner) {
+                        const visibleHeight = chartWrapper.clientHeight || 420;
+                        const rowHeight = 48;
+                        const contentHeight = Math.max(visibleHeight, labels.length * rowHeight);
+                        chartInner.style.height = `${contentHeight}px`;
+                    }
+
+                    new Chart(canvas, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [
+                                {
+                                    label: 'Реєстрації',
+                                    data: registrations,
+                                    backgroundColor: '#ead5ff',
+                                    borderColor: '#9810fa',
+                                    borderWidth: 1,
+                                    borderRadius: 8,
+                                    maxBarThickness: 44
+                                },
+                                {
+                                    label: 'Уподобання',
+                                    data: favorites,
+                                    backgroundColor: '#ffd6ea',
+                                    borderColor: '#e60076',
+                                    borderWidth: 1,
+                                    borderRadius: 8,
+                                    maxBarThickness: 44
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'y',
+                                intersect: true
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        boxWidth: 14,
+                                        color: '#64748b'
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'nearest',
+                                    axis: 'y',
+                                    intersect: true,
+                                    callbacks: {
+                                        label: (context) => `${context.dataset.label}: ${context.parsed.x}`
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: '#64748b',
+                                        precision: 0
+                                    },
+                                    grid: {
+                                        color: '#e2e8f0'
+                                    }
+                                },
+                                y: {
+                                    ticks: {
+                                        color: '#0f172a'
+                                    },
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                const statusCanvas = document.getElementById('organization-status-chart');
+                if (statusCanvas && statusLabels.length > 0) {
+                    const statusColors = statusLabels.map((_, index) => statusPalette[index % statusPalette.length]);
+                    const statusBorderColors = statusLabels.map((_, index) => statusBorderPalette[index % statusBorderPalette.length]);
+
+                    new Chart(statusCanvas, {
+                        type: 'pie',
+                        data: {
+                            labels: statusLabels,
+                            datasets: [
+                                {
+                                    label: 'Кількість подій',
+                                    data: statusValues,
+                                    backgroundColor: statusColors,
+                                    borderColor: statusBorderColors,
+                                    borderWidth: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#334155',
+                                        boxWidth: 12,
+                                        padding: 16
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => {
+                                            const value = context.parsed;
+                                            const total = statusValues.reduce((sum, item) => sum + item, 0);
+                                            const percent = total > 0 ? (value * 100 / total).toFixed(1) : '0.0';
+                                            return `${context.label}: ${value} (${percent}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            })();
+        </script>
+    }
+}

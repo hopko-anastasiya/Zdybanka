@@ -15,6 +15,10 @@ public class OrganizationStatisticsViewModel
     public int TotalFavoritesCount { get; set; }
 
     public List<PopularOrganizationEventViewModel> TopEventsByRegistrations { get; set; } = new();
+
+    public List<PopularOrganizationEventViewModel> EventsEngagement { get; set; } = new();
+
+    public List<EventStatusDistributionViewModel> EventsByStatus { get; set; } = new();
 }
 
 public class PopularOrganizationEventViewModel
@@ -26,4 +30,11 @@ public class PopularOrganizationEventViewModel
     public int RegistrationsCount { get; set; }
 
     public int FavoritesCount { get; set; }
+}
+
+public class EventStatusDistributionViewModel
+{
+    public string StatusName { get; set; } = string.Empty;
+
+    public int EventsCount { get; set; }
 }

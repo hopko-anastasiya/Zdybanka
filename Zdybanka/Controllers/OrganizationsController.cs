@@ -236,6 +236,29 @@ namespace Zdybanka.Controllers
                 .Take(3)
                 .ToListAsync();
 
+            var eventsEngagement = await eventsQuery
+                .Select(e => new PopularOrganizationEventViewModel
+                {
+                    EventId = e.Id,
+                    Title = e.Title,
+                    RegistrationsCount = e.Registrations.Count(),
+                    FavoritesCount = e.Userfavorites.Count()
+                })
+                .OrderBy(e => e.Title)
+                .ToListAsync();
+
+            var eventsByStatus = await eventsQuery
+                .Select(e => e.Status != null ? e.Status.Statusname : "Без статусу")
+                .GroupBy(statusName => statusName)
+                .Select(group => new EventStatusDistributionViewModel
+                {
+                    StatusName = group.Key,
+                    EventsCount = group.Count()
+                })
+                .OrderByDescending(item => item.EventsCount)
+                .ThenBy(item => item.StatusName)
+                .ToListAsync();
+
             var viewModel = new OrganizationStatisticsViewModel
             {
                 OrganizationId = organization.Id,
@@ -244,7 +267,9 @@ namespace Zdybanka.Controllers
                 CompletedEventsCount = completedEventsCount,
                 TotalRegistrationsCount = totalRegistrationsCount,
                 TotalFavoritesCount = totalFavoritesCount,
-                TopEventsByRegistrations = topEvents
+                TopEventsByRegistrations = topEvents,
+                EventsEngagement = eventsEngagement,
+                EventsByStatus = eventsByStatus
             };
 
             return View(viewModel);
