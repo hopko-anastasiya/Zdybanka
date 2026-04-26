@@ -6,31 +6,33 @@ namespace Zdybanka.Services
 {
     public class EmailSender : IEmailSender
     {
-        public Task SendEmailAsync(string email, string subject, string message)
+        public async Task SendEmailAsync(string email, string subject, string message)
         {
-            // Dummy implementation using System.Net.Mail
-            // Recommend replacing with real credentials or a service like MailKit/SendGrid
+            var mail = "Gopkxf60@gmail.com"; 
+            var pw = "nywq tuol khat lokl";
 
-            /* 
-            var mail = "your-email@gmail.com";
-            var pw = "your-app-password";
-
-            var client = new SmtpClient("smtp.gmail.com", 587)
+            // 2. Налаштування клієнта
+            using (var client = new SmtpClient("smtp.gmail.com", 587))
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(mail, pw)
-            };
+                client.EnableSsl = true;
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.UseDefaultCredentials = false;
+                client.Credentials = new NetworkCredential(mail, pw);
 
-            return client.SendMailAsync(
-                new MailMessage(from: mail, to: email, subject, message)
+                // 3. Створення листа
+                var mailMessage = new MailMessage
                 {
+                    From = new MailAddress(mail, "Zdybanka Support"), // Ім'я відправника
+                    Subject = subject,
+                    Body = message,
                     IsBodyHtml = true
-                }
-            );
-            */
+                };
+                
+                mailMessage.To.Add(email);
 
-             // Returning completed task for now
-             return Task.CompletedTask;
+                // 4. Відправка
+                await client.SendMailAsync(mailMessage);
+            }
         }
     }
 }
