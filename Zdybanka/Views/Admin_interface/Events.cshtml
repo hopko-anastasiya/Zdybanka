@@ -1,0 +1,284 @@
+@model IEnumerable<Zdybanka.Models.Event>
+
+@{
+    ViewData["Title"] = "Події";
+    var eventIdsWithHistory = ViewData["EventIdsWithHistory"] as HashSet<int> ?? new HashSet<int>();
+    var statusOptions = Model
+        .Select(e => e.Status?.Statusname)
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .Distinct()
+        .OrderBy(s => s)
+        .ToList();
+    var categoryOptions = Model
+        .Select(e => e.Category?.Categoryname)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Distinct()
+        .OrderBy(c => c)
+        .ToList();
+}
+
+
+@if (TempData["AdminEventsSuccess"] is string successMessage)
+{
+    <div class="admin-feedback admin-feedback-success">@successMessage</div>
+}
+
+@if (TempData["AdminEventsError"] is string errorMessage)
+{
+    <div class="admin-feedback admin-feedback-error">@errorMessage</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <p>Події відсутні.</p>
+    </div>
+}
+else
+{
+        <div class="organizations-search-form admin-events-filters">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-funnel-icon lucide-funnel"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></svg>
+            <select id="admin-events-status-filter" class="organizations-search-input admin-events-filter-select">
+                <option value="">Усі статуси</option>
+                @foreach (var status in statusOptions)
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+
+            <select id="admin-events-category-filter" class="organizations-search-input admin-events-filter-select">
+                <option value="">Усі категорії</option>
+                @foreach (var category in categoryOptions)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+
+            <input type="text"
+                   id="admin-events-search-input"
+                   class="organizations-search-input"
+                   placeholder="Пошук за назвою події" />
+        </div>
+
+    <div class="admin-events-list">
+        @foreach (var item in Model)
+        {
+            var isCanceled = string.Equals(item.Status?.Statusname, "Відмінена", StringComparison.OrdinalIgnoreCase);
+            var isCompleted = string.Equals(item.Status?.Statusname, "Проведена", StringComparison.OrdinalIgnoreCase);
+            var statusClass = isCanceled
+                ? "status-cancelled"
+                : isCompleted
+                    ? "status-completed"
+                    : "status-planned";
+            var hasHistory = eventIdsWithHistory.Contains(item.Id);
+            <div class="card admin-event-card admin-event-item"
+                 data-event-title="@item.Title"
+                 data-event-status="@(item.Status?.Statusname ?? string.Empty)"
+                 data-event-category="@(item.Category?.Categoryname ?? string.Empty)">
+                <div class="admin-event-media">
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" alt="Зображення події @item.Title" class="admin-event-image" />
+                    }
+                    else
+                    {
+                        <div class="admin-event-image-placeholder" aria-label="Немає фото">Немає фото</div>
+                    }
+                </div>
+
+                <div class="admin-event-top">
+                    <div class="admin-event-title-row">
+                        <h4 class="admin-event-title">@item.Title</h4>
+                        <div class="admin-event-badges">
+                            <span class="status-badge status-default">@(item.Category?.Categoryname ?? "Без категорії")</span>
+                            <span class="status-badge @statusClass">@(item.Status?.Statusname ?? "-")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-event-actions">
+                    @if (hasHistory)
+                    {
+                        <button type="button" class="btn-base admin-event-history-btn" data-event-id="@item.Id" data-event-title="@item.Title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history w-4 h-4 mr-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                            Історія
+                        </button>
+                    }
+                    <form asp-action="CancelEvent" method="post" class="admin-event-cancel-form" data-event-title="@item.Title">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn-base btn-decline" @(isCanceled ? "disabled" : null)>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban w-4 h-4 mr-2"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>
+                            Заблокувати
+                        </button>
+                    </form>
+                </div>
+
+                <div class="admin-event-inline-meta">
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-event-meta-icon lucide lucide-building2-icon lucide-building-2"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></svg>
+                        @(item.Organization?.Fullname ?? "-")
+                    </span>
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-event-meta-icon lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                        @(item.Eventdate?.ToString("dd.MM.yyyy HH:mm") ?? "-")
+                    </span>
+                    <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-event-meta-icon lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                        @(string.IsNullOrWhiteSpace(item.Location) ? "-" : item.Location)
+                    </span>
+                </div>
+
+                <div class="admin-event-description">
+                    <strong>Опис:</strong> @(string.IsNullOrWhiteSpace(item.Description) ? "-" : item.Description)
+                </div>
+            </div>
+        }
+    </div>
+
+    <p id="admin-events-empty" class="organization-search-empty" style="display:none;">Нічого не знайдено за заданими фільтрами.</p>
+}
+
+<div id="admin-event-history-overlay" class="admin-event-history-overlay" style="display:none;">
+    <div class="admin-event-history-dialog card">
+        <button type="button" id="admin-event-history-close" class="admin-event-history-close" aria-label="Закрити">&times;</button>
+        <h3 id="admin-event-history-title">Історія змін події</h3>
+        <div id="admin-event-history-content" class="admin-event-history-content">
+            <p>Завантаження...</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const searchInput = document.getElementById('admin-events-search-input');
+            const statusFilter = document.getElementById('admin-events-status-filter');
+            const categoryFilter = document.getElementById('admin-events-category-filter');
+            const items = Array.from(document.querySelectorAll('.admin-event-item'));
+            const emptyMessage = document.getElementById('admin-events-empty');
+
+            if (!searchInput || !statusFilter || !categoryFilter || !items.length) {
+                return;
+            }
+
+            const normalize = (value) => (value || '').trim().toLowerCase();
+
+            const filterItems = () => {
+                const query = normalize(searchInput.value);
+                const status = normalize(statusFilter.value);
+                const category = normalize(categoryFilter.value);
+                let visibleCount = 0;
+
+                items.forEach((item) => {
+                    const title = normalize(item.getAttribute('data-event-title'));
+                    const itemStatus = normalize(item.getAttribute('data-event-status'));
+                    const itemCategory = normalize(item.getAttribute('data-event-category'));
+
+                    const matchQuery = !query || title.includes(query);
+                    const matchStatus = !status || itemStatus === status;
+                    const matchCategory = !category || itemCategory === category;
+                    const isVisible = matchQuery && matchStatus && matchCategory;
+
+                    item.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (emptyMessage) {
+                    emptyMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            };
+
+            searchInput.addEventListener('input', filterItems);
+            statusFilter.addEventListener('change', filterItems);
+            categoryFilter.addEventListener('change', filterItems);
+
+            filterItems();
+        })();
+
+        (() => {
+            const cancelForms = document.querySelectorAll('.admin-event-cancel-form');
+            cancelForms.forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    const title = form.getAttribute('data-event-title') || 'цю подію';
+                    const confirmed = confirm(`Ви справді хочете відмінити подію "${title}"?`);
+                    if (!confirmed) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        })();
+
+        (() => {
+            const overlay = document.getElementById('admin-event-history-overlay');
+            const closeButton = document.getElementById('admin-event-history-close');
+            const historyTitle = document.getElementById('admin-event-history-title');
+            const historyContent = document.getElementById('admin-event-history-content');
+            const historyButtons = document.querySelectorAll('.admin-event-history-btn');
+
+            if (!overlay || !closeButton || !historyTitle || !historyContent || !historyButtons.length) {
+                return;
+            }
+
+            const closeOverlay = () => {
+                overlay.style.display = 'none';
+                historyContent.innerHTML = '<p>Завантаження...</p>';
+            };
+
+            closeButton.addEventListener('click', closeOverlay);
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) {
+                    closeOverlay();
+                }
+            });
+
+            historyButtons.forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const eventId = button.getAttribute('data-event-id');
+                    const eventTitle = button.getAttribute('data-event-title') || 'Подія';
+
+                    historyTitle.textContent = `Історія змін: ${eventTitle}`;
+                    historyContent.innerHTML = '<p>Завантаження...</p>';
+                    overlay.style.display = 'flex';
+
+                    try {
+                        const response = await fetch(`@Url.Action("EventHistory", "Admin_interface")?id=${eventId}`);
+                        if (!response.ok) {
+                            throw new Error('Не вдалося завантажити історію змін.');
+                        }
+
+                        const historyItems = await response.json();
+                        if (!historyItems || historyItems.length === 0) {
+                            historyContent.innerHTML = '<p>Історія змін відсутня.</p>';
+                            return;
+                        }
+
+                        historyContent.innerHTML = '';
+                        historyItems.forEach((historyItem) => {
+                            const changeBlock = document.createElement('div');
+                            changeBlock.className = 'admin-event-history-block';
+
+                            const date = document.createElement('div');
+                            date.className = 'admin-event-history-date';
+                            date.textContent = historyItem.changedAt || '-';
+                            changeBlock.appendChild(date);
+
+                            (historyItem.changes || []).forEach((change) => {
+                                const row = document.createElement('div');
+                                row.className = 'admin-event-history-row';
+                                row.innerHTML = `<p><strong>${change.field}</strong></p><p>Було: <span class="admin-event-history-old-value">${change.oldValue}</span></p><p>Стало: <span class="admin-event-history-new-value">${change.newValue}</span></p>`;
+                                changeBlock.appendChild(row);
+                            });
+
+                            historyContent.appendChild(changeBlock);
+                        });
+                    } catch (error) {
+                        historyContent.innerHTML = `<p>${error.message}</p>`;
+                    }
+                });
+            });
+        })();
+    </script>
+}

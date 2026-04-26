@@ -11,6 +11,7 @@ public partial class Event
     [Display(Name = "Організація")]
     public int? Organizationid { get; set; }
 
+    [Required(ErrorMessage = "Категорія обов'язкова")]
     [Display(Name = "Категорія")]
     public int? Categoryid { get; set; }
 
@@ -21,9 +22,11 @@ public partial class Event
     [Display(Name = "Назва")]
     public string Title { get; set; } = null!;
 
+    [Required(ErrorMessage = "Місце проведення обов'язкове")]
     [Display(Name = "Місце проведення")]
     public string? Location { get; set; }
 
+    [Required(ErrorMessage = "Опис обов'язковий")]
     [Display(Name = "Опис")]
     public string? Description { get; set; }
 
@@ -37,6 +40,10 @@ public partial class Event
 
     [Display(Name = "Дата оновлення")]
     public DateTime? Updatedat { get; set; }
+
+    [Display(Name = "Посилання на зображення")]
+    [ValidImageUrl]
+    public string? ImageUrl { get; set; }
 
     [Display(Name = "Категорія")]
     public virtual Eventcategory? Category { get; set; }

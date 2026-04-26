@@ -1,29 +1,68 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Zdybanka.Models;
+using Zdybanka.Services;
 
 namespace Zdybanka.Controllers
 {
     public class HomeController : Controller
     {
-        public const string CurrentRole = "Organization";
-
         private readonly ILogger<HomeController> _logger;
+        private readonly Lab1Context _context;
+        private readonly IAppAuthenticationService _AppAuthenticationService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, Lab1Context context, IAppAuthenticationService AppAuthenticationService)
         {
             _logger = logger;
+            _context = context;
+            _AppAuthenticationService = AppAuthenticationService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return CurrentRole switch
+            var currentUser = await _AppAuthenticationService.GetCurrentUserAsync();
+
+            if (currentUser == null)
             {
-                "User" => RedirectToAction("Index", "Events"),
-                "Organization" => RedirectToAction("Profile", "Organizations", new { id = TemporaryIdentity.CurrentOrganizationId }),
-                "Admin" => RedirectToAction("Index", "Organizations"),
+                return RedirectToAction("Index", "Events");
+            }
+
+            return currentUser.Role switch
+            {
+                UserRole.Admin => RedirectToAction("Organizations", "Admin_interface"),
+                UserRole.OrganizationManager => await RedirectOrganizationManagerAsync(),
+                UserRole.User => RedirectToAction("Index", "Events"),
                 _ => RedirectToAction("Index", "Events")
             };
+        }
+
+        private async Task<IActionResult> RedirectOrganizationManagerAsync()
+        {
+            var currentUserId = _AppAuthenticationService.CurrentUserId;
+            if (!currentUserId.HasValue)
+            {
+                return RedirectToAction("Index", "Events");
+            }
+
+            var organization = await _context.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == currentUserId.Value);
+
+            if (organization == null)
+            {
+                return RedirectToAction("Index", "Organizations");
+            }
+
+            return RedirectToAction("Profile", "Organizations", new { id = organization.Id });
+        }
+
+        private IActionResult RedirectToLocal(string? returnUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Privacy()
@@ -38,3 +77,4 @@ namespace Zdybanka.Controllers
         }
     }
 }
+

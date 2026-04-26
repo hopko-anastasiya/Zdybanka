@@ -56,7 +56,8 @@ public static class EventStatusAutomationService
             }
 
             item.Statusid = targetStatusId;
-            item.Updatedat = now;
+            item.Updatedat = DateTime.Now;
+
             hasChanges = true;
         }
 

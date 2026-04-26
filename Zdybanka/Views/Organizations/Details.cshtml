@@ -11,10 +11,10 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Fullname)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
+            @Html.DisplayFor(model => model.Fullname)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Email)
@@ -35,16 +35,15 @@
             @Html.DisplayFor(model => model.Createdat)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Updatedat)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Updatedat)
-        </dd>
-        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Status)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status.Statusname)
+            @{
+                var statusClass = Model.Status.Statusname == "Верифікована" ? "status-planned" :
+                                  Model.Status.Statusname == "Не верифікована" ? "status-default" :
+                                  Model.Status.Statusname == "Заблокована" ? "status-cancelled" : "status-default";
+            }
+            <span class="status-badge @statusClass">@Model.Status.Statusname</span>
         </dd>
     </dl>
 </div>

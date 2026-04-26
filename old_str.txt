@@ -1,0 +1,3 @@
+﻿                var statusName = GetCsvValueForImport(row, headerMap, hasHeaderRow, 5, "status", "������")?.Trim();
+                var imageUrlRaw = GetCsvValueForImport(row, headerMap, hasHeaderRow, 6, "imageurl", "���������", "image")?.Trim();
+

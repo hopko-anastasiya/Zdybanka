@@ -1,25 +1,35 @@
 ﻿@{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isOrganizationsTabActive = currentController == "Admin_interface"
+        && (currentAction == "Organizations" || currentAction == "ImportOrganizations");
 }
 <nav class="my-nav">
     <ul>
         <li class="my-nav-item">
-            <a asp-controller="Organizations" asp-action="Index" class="@(currentController == "Organizations" ? "active" : "")">
+            <a asp-controller="Admin_interface" asp-action="Organizations" class="@(isOrganizationsTabActive ? "active" : "")">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building2-icon lucide-building-2"><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg>
                 <span>Організації</span>
             </a>
         </li>
         <li class="my-nav-item">
-            <a asp-controller="Events" asp-action="Index" class="@(currentController == "Events" ? "active" : "")">
+            <a asp-controller="Admin_interface" asp-action="Events" class="@(currentController == "Admin_interface" && currentAction == "Events" ? "active" : "")">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar"><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /></svg>
                 <span>Події</span>
             </a>
         </li>
         <li class="my-nav-item">
-            <a asp-controller="Eventcategories" asp-action="Index" class="@(currentController == "Eventcategories" ? "active" : "")">
+            <a asp-controller="Admin_interface" asp-action="Category" class="@(currentController == "Admin_interface" && currentAction == "Category" ? "active" : "")">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-blocks-icon lucide-blocks"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2" /><rect x="14" y="2" width="8" height="8" rx="1" /></svg>
                 <span>Категорії</span>
             </a>
+        </li>
+        <li class="my-nav-item">
+            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm_admin">
+                <a href="#" onclick="document.getElementById('logoutForm_admin').submit(); return false;" class="logout-link">
+                    <span>Вийти</span>
+                </a>
+            </form>
         </li>
     </ul>
 </nav>

@@ -40,8 +40,13 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="ImageUrl" class="control-label"></label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="Eventdate" class="control-label"></label>
-                <input asp-for="Eventdate" class="form-control" />
+                <input asp-for="Eventdate" type="datetime-local" class="form-control" id="eventdate-input" />
                 <span asp-validation-for="Eventdate" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -57,4 +62,19 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        (function () {
+            var dateInput = document.getElementById('eventdate-input');
+            if (!dateInput) {
+                return;
+            }
+
+            var minDate = new Date(Date.now() - 60 * 60 * 1000);
+            var pad = function (n) { return String(n).padStart(2, '0'); };
+            var minStr = minDate.getFullYear() + '-' + pad(minDate.getMonth() + 1) + '-' + pad(minDate.getDate())
+                + 'T' + pad(minDate.getHours()) + ':' + pad(minDate.getMinutes());
+
+            dateInput.min = minStr;
+        })();
+    </script>
 }

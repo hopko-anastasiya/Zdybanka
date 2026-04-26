@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Zdybanka.Models;
 
 namespace Zdybanka.Controllers
 {
+    [Authorize(Roles = nameof(UserRole.Admin))]
     public class UsersController : Controller
     {
         private readonly Lab1Context _context;
@@ -19,9 +21,28 @@ namespace Zdybanka.Controllers
         }
 
         // GET: Users
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? role = null)
         {
-            return View(await _context.Users.ToListAsync());
+            IQueryable<User> usersQuery = _context.Users.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                if (Enum.TryParse<UserRole>(role, true, out var parsedRole))
+                {
+                    usersQuery = usersQuery.Where(u => u.Role == parsedRole);
+                }
+                else
+                {
+                    ModelState.AddModelError("role", "Невідома роль для фільтрації.");
+                }
+            }
+
+            ViewData["SelectedRole"] = role;
+            ViewData["RoleOptions"] = BuildRoleSelectList(role);
+
+            return View(await usersQuery
+                .OrderBy(u => u.Fullname)
+                .ToListAsync());
         }
 
         // GET: Users/Details/5
@@ -45,6 +66,7 @@ namespace Zdybanka.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
+            ViewData["RoleOptions"] = BuildRoleSelectList(UserRole.User.ToString());
             return View();
         }
 
@@ -53,14 +75,21 @@ namespace Zdybanka.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Fullname,Email,Createdat")] User user)
+        public async Task<IActionResult> Create([Bind("Id,Fullname,Email,PasswordHash,Role,Createdat")] User user)
         {
             if (ModelState.IsValid)
             {
+                if (!user.Createdat.HasValue)
+                {
+                    user.Createdat = DateTime.Now;
+                }
+
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["RoleOptions"] = BuildRoleSelectList(user.Role.ToString());
             return View(user);
         }
 
@@ -77,6 +106,8 @@ namespace Zdybanka.Controllers
             {
                 return NotFound();
             }
+
+            ViewData["RoleOptions"] = BuildRoleSelectList(user.Role.ToString());
             return View(user);
         }
 
@@ -85,7 +116,7 @@ namespace Zdybanka.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Fullname,Email")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Fullname,Email,PasswordHash,Role")] User user)
         {
             if (id != user.Id)
             {
@@ -96,8 +127,17 @@ namespace Zdybanka.Controllers
             {
                 try
                 {
-                    user.Createdat = _context.Users.AsNoTracking().FirstOrDefault(o => o.Id == id)?.Createdat;
-                    _context.Update(user);
+                    var existingUser = await _context.Users.FirstOrDefaultAsync(o => o.Id == id);
+                    if (existingUser == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingUser.Fullname = user.Fullname;
+                    existingUser.Email = user.Email;
+                    existingUser.PasswordHash = user.PasswordHash;
+                    existingUser.Role = user.Role;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -113,6 +153,8 @@ namespace Zdybanka.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["RoleOptions"] = BuildRoleSelectList(user.Role.ToString());
             return View(user);
         }
 
@@ -152,6 +194,18 @@ namespace Zdybanka.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
+        }
+
+        private static SelectList BuildRoleSelectList(string? selectedRole)
+        {
+            var items = new List<SelectListItem>
+            {
+                new() { Value = UserRole.Admin.ToString(), Text = "admin" },
+                new() { Value = UserRole.OrganizationManager.ToString(), Text = "organization_manager" },
+                new() { Value = UserRole.User.ToString(), Text = "user" }
+            };
+
+            return new SelectList(items, "Value", "Text", selectedRole);
         }
     }
 }

@@ -1,0 +1,375 @@
+@using Zdybanka.Models.ViewModels
+@model IEnumerable<Zdybanka.Models.Organization>
+
+@{
+    ViewData["Title"] = "Організації";
+    var organizationSearch = ViewData["OrganizationSearch"] as string;
+    var pendingOrganizations = ViewData["PendingOrganizations"] as List<Zdybanka.Models.Organization> ?? new List<Zdybanka.Models.Organization>();
+    var unblockRequestOrganizations = ViewData["UnblockRequestOrganizations"] as List<Zdybanka.Models.Organization> ?? new List<Zdybanka.Models.Organization>();
+    var totalRequestsCount = pendingOrganizations.Count + unblockRequestOrganizations.Count;
+    var importResult = ViewData["OrganizationImportResult"] as OrganizationImportResultViewModel;
+}
+
+<div class="container">
+
+    @if (TempData["AdminOrganizationsSuccess"] is string successMessage)
+    {
+        <div id="admin-success-toast" class="admin-toast admin-toast-success" role="status" aria-live="polite">@successMessage</div>
+    }
+
+    @if (TempData["AdminOrganizationsError"] is string errorMessage)
+    {
+        <p class="admin-feedback admin-feedback-error">@errorMessage</p>
+    }
+
+    <div class="organizations-requests-section">
+        <h3>Заявки (@totalRequestsCount)</h3>
+
+        @if (totalRequestsCount == 0)
+        {
+            <div class="card organization-request-card">
+                <p>Немає заявок.</p>
+            </div>
+        }
+
+        @foreach (var pendingItem in pendingOrganizations)
+        {
+            <div class="card organization-request-card organization-pending-item">
+                <div class="organization-admin-header">
+                    <h4>@pendingItem.Fullname</h4>
+                    <span class="status-badge status-default">@pendingItem.Status?.Statusname</span>
+                </div>
+
+                <div class="organization-admin-meta">
+                    <span><strong>Дата створення:</strong> @(pendingItem.Createdat?.ToString("dd.MM.yyyy") ?? "-")</span>
+                    <span><strong>Пошта:</strong> @(string.IsNullOrWhiteSpace(pendingItem.Email) ? "-" : pendingItem.Email)</span>
+                    <p class="organization-admin-description">
+                    <strong>Опис:</strong> @(string.IsNullOrWhiteSpace(pendingItem.Description) ? "-" : pendingItem.Description)
+                </p>
+                </div>
+
+                
+
+                <div class="organization-request-actions">
+                    <form asp-action="ApproveOrganizationVerification"
+                          asp-route-id="@pendingItem.Id"
+                          method="post"
+                          class="organization-action-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" 
+                                class="btn-base btn-request-approve" 
+                                data-org-name="@pendingItem.Fullname"
+                                data-action-label="підтвердити верифікацію для"
+                                aria-label="Підтвердити"
+                                title="Підтвердити">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+                        </button>
+                    </form>
+
+                    <form asp-action="RejectOrganizationVerification"
+                          asp-route-id="@pendingItem.Id"
+                          method="post"
+                          class="organization-action-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" 
+                                class="btn-base btn-decline" 
+                                data-org-name="@pendingItem.Fullname"
+                                data-action-label="відхилити заявку для"
+                                aria-label="Відхилити"
+                                title="Відхилити">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @foreach (var unblockItem in unblockRequestOrganizations)
+        {
+            <div class="card organization-request-card organization-pending-item">
+                <div class="organization-admin-header">
+                    <h4>@unblockItem.Fullname</h4>
+                    <span class="status-badge status-cancelled">@unblockItem.Status?.Statusname</span>
+                </div>
+
+                <div class="organization-admin-meta" >
+                    <span><strong>Дата створення:</strong> @(unblockItem.Createdat?.ToString("dd.MM.yyyy") ?? "-")</span>
+                    <span><strong>Пошта:</strong> @(string.IsNullOrWhiteSpace(unblockItem.Email) ? "-" : unblockItem.Email)</span>
+                    <p class="organization-admin-description">
+                    <strong>Опис:</strong> @(string.IsNullOrWhiteSpace(unblockItem.Description) ? "-" : unblockItem.Description)
+                </p>
+                </div>
+
+                
+
+                <div class="organization-request-actions">
+                    <form asp-action="ApproveOrganizationUnblock"
+                          asp-route-id="@unblockItem.Id"
+                          method="post"
+                          class="organization-action-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" 
+                                class="btn-base btn-request-approve" 
+                                data-org-name="@unblockItem.Fullname"
+                                data-action-label="підтвердити розблокування для"
+                                aria-label="Підтвердити"
+                                title="Підтвердити">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+                        </button>
+                    </form>
+
+                    <form asp-action="RejectOrganizationUnblock"
+                          asp-route-id="@unblockItem.Id"
+                          method="post"
+                          class="organization-action-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" 
+                                class="btn-base btn-decline" 
+                                data-org-name="@unblockItem.Fullname"
+                                data-action-label="відхилити розблокування для"
+                                aria-label="Відхилити"
+                                title="Відхилити">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="organizations-admin-list-header">
+        <h3>Список організацій</h3>
+        <form asp-action="Organizations" method="get" class="organizations-search-form" id="organizations-search-form">
+            <input type="text"
+                   name="search"
+                   value="@organizationSearch"
+                   class="organizations-search-input"
+                   id="organizations-search-input"
+                   placeholder="Пошук за назвою" />
+        </form>
+    </div>
+
+    <div class="card top-events organizations-admin-list">
+        <div class="organization-import-row">
+            <form asp-action="ImportOrganizations"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="organization-import-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="search" value="@organizationSearch" />
+                <div class="organization-import-controls">
+                    <div class="organization-import-file-picker">
+                        <input type="file"
+                               name="csvFile"
+                               accept=".csv,text/csv"
+                               id="organization-import-file"
+                               class="organization-import-file-input"
+                               required />
+                        <label for="organization-import-file" class="btn-base organization-import-file-btn" aria-label="Обрати файл">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-up-icon lucide-folder-up"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="m9 13 3-3 3 3"/></svg>
+                        </label>
+                        <span id="organization-import-file-name" class="organization-import-file-name">Файл не обрано</span>
+                    </div>
+                    <div class="organization-import-actions">
+                        <button type="submit" class="btn-base btn-confirm">Імпортувати CSV</button>
+                        <button type="button" id="organization-import-clear" class="btn-base organization-import-clear-btn">Очистити</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="organization-import-results" id="organization-import-results">
+                @if (importResult is not null)
+                {
+                    <div class="admin-feedback @(importResult.SkippedCount == 0 ? "admin-feedback-success" : "admin-feedback-error") organization-import-summary">
+                        @importResult.Summary
+                    </div>
+
+                    @if (importResult.Messages.Any())
+                    {
+                        <ul class="organization-import-messages">
+                            @foreach (var message in importResult.Messages)
+                            {
+                                <li class="organization-import-message organization-import-message-error">
+                                    @if (message.RowNumber > 0)
+                                    {
+                                        <strong>Рядок @message.RowNumber:</strong>
+                                    }
+                                    @message.Message
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+                else
+                {
+                    <p class="organization-import-empty">Після завантаження файлу тут з'явиться звіт про імпорт.</p>
+                }
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div>
+                <p>Організації відсутні.</p>
+            </div>
+        }
+        else
+        {
+            <div class="organizations-admin-scroll">
+                @foreach (var item in Model)
+                {
+                    var isBlocked = string.Equals(item.Status?.Statusname, "Заблокована", StringComparison.OrdinalIgnoreCase);
+                    var statusClass = string.Equals(item.Status?.Statusname, "Верифікована", StringComparison.OrdinalIgnoreCase)
+                        ? "status-planned"
+                        : isBlocked
+                            ? "status-cancelled"
+                            : "status-default";
+
+                    <div class="top-event organization-admin-item">
+                        <div class="organization-admin-top-row">
+                            <div class="organization-admin-header">
+                                <h4>@item.Fullname</h4>
+                                <span class="status-badge @statusClass">
+                                    @item.Status?.Statusname
+                                </span>
+                            </div>
+
+                            <div class="organization-admin-actions">
+                                  <form asp-action="ToggleOrganizationBlock"
+                                      asp-route-id="@item.Id"
+                                      method="post"
+                                      class="organization-action-form"
+                                      data-org-name="@item.Fullname"
+                                      data-action-label="@(isBlocked ? "розблокувати" : "заблокувати")">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-base btn-decline">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban w-4 h-4 mr-2"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>
+                                        @(isBlocked ? "Розблокувати" : "Заблокувати")
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="organization-admin-meta">
+                            <span><strong>Дата створення:</strong> @(item.Createdat?.ToString("dd.MM.yyyy") ?? "-" )</span>
+                            <span><strong>Пошта:</strong> @(string.IsNullOrWhiteSpace(item.Email) ? "-" : item.Email)</span>
+                        </div>
+
+                        <p class="organization-admin-description">
+                            <strong>Опис:</strong> @(string.IsNullOrWhiteSpace(item.Description) ? "-" : item.Description)
+                        </p>
+                    </div>
+                }
+                <p id="organizations-search-empty" class="organization-search-empty" style="display: none;">Нічого не знайдено за вашим запитом.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const searchForm = document.getElementById('organizations-search-form');
+            const searchInput = document.getElementById('organizations-search-input');
+            const organizationItems = Array.from(document.querySelectorAll('.organization-admin-item'));
+            const emptySearchMessage = document.getElementById('organizations-search-empty');
+
+            if (!searchForm || !searchInput || organizationItems.length === 0) {
+                return;
+            }
+
+            const normalize = (value) => (value || '').trim().toLowerCase();
+
+            const filterItems = () => {
+                const query = normalize(searchInput.value);
+                let visibleCount = 0;
+
+                organizationItems.forEach((item) => {
+                    const title = item.querySelector('h4')?.textContent || '';
+                    const isMatch = normalize(title).includes(query);
+                    item.classList.toggle('organization-hidden', !isMatch);
+                    if (isMatch) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (emptySearchMessage) {
+                    emptySearchMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            };
+
+            searchForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                filterItems();
+            });
+
+            searchInput.addEventListener('input', () => {
+                filterItems();
+            });
+
+            filterItems();
+        })();
+
+        (() => {
+            const successToast = document.getElementById('admin-success-toast');
+            if (!successToast) {
+                return;
+            }
+
+            setTimeout(() => {
+                successToast.classList.add('is-hiding');
+                successToast.addEventListener('animationend', () => {
+                    successToast.remove();
+                }, { once: true });
+            }, 3200);
+        })();
+
+        (() => {
+            const importForm = document.querySelector('.organization-import-form');
+            const importFileInput = document.getElementById('organization-import-file');
+            const importFileName = document.getElementById('organization-import-file-name');
+            const importResults = document.getElementById('organization-import-results');
+            const clearImportButton = document.getElementById('organization-import-clear');
+
+            if (!importForm || !importFileInput || !importFileName || !importResults || !clearImportButton) {
+                return;
+            }
+
+            const updateFileName = () => {
+                importFileName.textContent = importFileInput.files?.length
+                    ? importFileInput.files[0].name
+                    : 'Файл не обрано';
+            };
+
+            importFileInput.addEventListener('change', updateFileName);
+
+            clearImportButton.addEventListener('click', () => {
+                importForm.reset();
+                importResults.innerHTML = '<p class="organization-import-empty">Після завантаження файлу тут з\'явиться звіт про імпорт.</p>';
+                updateFileName();
+            });
+
+            updateFileName();
+        })();
+
+        (() => {
+            const actionForms = document.querySelectorAll('.organization-action-form');
+            if (!actionForms.length) {
+                return;
+            }
+
+            actionForms.forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    const button = form.querySelector('button[type="submit"]');
+                    const organizationName = button?.dataset.orgName || 'цю організацію';
+                    const actionLabel = button?.dataset.actionLabel || 'змінити статус';
+                    const isConfirmed = window.confirm(`Ви впевнені, що хочете ${actionLabel} організацію "${organizationName}"?`);
+
+                    if (!isConfirmed) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        })();
+    </script>
+}

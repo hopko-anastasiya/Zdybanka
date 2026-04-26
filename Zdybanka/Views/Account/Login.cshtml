@@ -1,0 +1,41 @@
+﻿
+@model Zdybanka.Models.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Увійти";
+    ViewData["Subtitle"] = "З поверненням!";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<form asp-action="Login" asp-route-returnUrl="@returnUrl" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="control-label fw-semibold mb-1" style="color: var(--label-color)"></label>
+        <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+    <div class="form-group mb-4">
+        <label asp-for="Password" class="control-label fw-semibold mb-1" style="color: var(--label-color)"></label>
+        <input asp-for="Password" class="form-control" placeholder="Ваш пароль" />
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+    <div class="form-group text-center">
+        <button type="submit" class="w-100 auth-btn">Увійти</button>
+    </div>
+    <div class="text-center mt-4">
+        <p class="text-muted small mb-1">
+            Немає акаунту? <a asp-action="Register" asp-route-returnUrl="@returnUrl" class="auth-link">Зареєструватись</a>
+        </p>
+        <p class="text-muted small mb-3">
+            <a asp-action="ForgotPassword" class="auth-link">Забули пароль?</a>
+        </p>
+        <p class="text-muted small">
+            <a asp-controller="Events" asp-action="Index" class="text-decoration-none text-muted" style="opacity: 0.7;">&larr; Повернутись на головну</a>
+        </p>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

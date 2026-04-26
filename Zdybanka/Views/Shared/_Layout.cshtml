@@ -9,6 +9,9 @@
 <body>
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var role = ViewData["Role"]?.ToString() ?? "Guest";
+        var isAuthenticated = (ViewData["IsAuthenticated"] as bool?) ?? false;
+        var returnUrl = Context.Request.Path + Context.Request.QueryString;
     }
     <header class="my-nav-pannel">
         <div class="my-title">
@@ -44,16 +47,24 @@
                 <span>Знайди свою подію</span>
             </div>
         </div>
+        <div class="auth-controls">
+            @if (!isAuthenticated)
+            {
+                <a class="auth-login-btn" style="background: var(--btn-gradient); color: #ffffff; display: flex; align-items: center; gap: 10px; font-size: 18px; text-decoration: none; padding: 15px 20px; border-radius: 20px; font-weight: 600; box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a;" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl">
+                    <span>Увійти</span>
+                </a>
+            }
+        </div>
         <div>
-            @if (ViewData["Role"]?.ToString() == "Admin")
+            @if (role == "Admin")
             {
                 <partial name="_AdminNav" />
             }
-            else if (ViewData["Role"]?.ToString() == "Organization")
+            else if (role == "Organization")
             {
                 <partial name="_OrganizationNav" />
             }
-            else
+            else if (isAuthenticated)
             {
                 <partial name="_UserNav" />
             }
@@ -65,9 +76,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer">
         <div class="container">
-            &copy; 2026 - Zdybanka - <a asp-area="" asp-controller="Home" asp-action="Privacy">Конфіденційність</a>
+            &copy; 2026 - Zdybanka - Всі права захищено
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

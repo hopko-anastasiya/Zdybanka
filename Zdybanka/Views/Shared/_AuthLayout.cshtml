@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Zdybanka</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body.auth-body {
+            background-color: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-card {
+            background-color: var(--card-color);
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--btn-border-color);
+            overflow: hidden;
+            width: 100%;
+        }
+        .auth-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--btn-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+        }
+        .auth-logo svg {
+            width: 40px;
+            height: 40px;
+        }
+        .auth-btn {
+            background: var(--btn-gradient);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px;
+            font-weight: 600;
+            transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+        }
+        .auth-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+            color: white;
+        }
+        .auth-link {
+            color: #a855f7;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .auth-link:hover {
+            text-decoration: underline;
+            color: #ec4899;
+        }
+        .form-control:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 0.25rem rgba(168, 85, 247, 0.25);
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="container d-flex justify-content-center">
+        <div style="max-width: 450px; width: 100%;">
+            <div class="auth-card p-4 p-sm-5">
+                <div class="auth-logo">
+                    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="1.8" transform="rotate(45)">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M24,24c-4.84,4.84-8.48,6.88-8.48,11.72a8.53,8.53,0,1,0,17.05,0"></path><path stroke-linecap="round" stroke-linejoin="round" d="M27.22,43.89a3.88,3.88,0,1,0-6.45,0"></path><path stroke-linecap="round" stroke-linejoin="round" d="M24,24c4.84-4.84,8.48-6.88,8.48-11.72a8.53,8.53,0,1,0-17,0"></path><path stroke-linecap="round" stroke-linejoin="round" d="M20.78,4.11a3.88,3.88,0,1,0,6.45,0"></path><path stroke-linecap="round" stroke-linejoin="round" d="M24,24c-4.84-4.84-6.88-8.48-11.72-8.48a8.53,8.53,0,1,0,0,17.05"></path><path stroke-linecap="round" stroke-linejoin="round" d="M4.11,27.22a3.88,3.88,0,1,0,0-6.45"></path><path stroke-linecap="round" stroke-linejoin="round" d="M24,24c4.84,4.84,6.88,8.48,11.72,8.48a8.53,8.53,0,1,0,0-17"></path><path stroke-linecap="round" stroke-linejoin="round" d="M43.89,20.78a3.88,3.88,0,1,0,0,6.45"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="fw-bold text-center mb-1">Zdybanka</h3>
+                <p class="text-muted text-center mb-4">@ViewData["Subtitle"]</p>
+
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

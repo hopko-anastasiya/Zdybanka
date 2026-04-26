@@ -1,7 +1,7 @@
 ﻿@{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-    var defaultOrganizationId = TemporaryIdentity.CurrentOrganizationId.ToString();
+    var defaultOrganizationId = ViewData["CurrentOrganizationId"]?.ToString() ?? string.Empty;
     var organizationIdFromEvents = Context.Request.Query["organizationId"].ToString();
     var organizationIdFromProfile = Context.Request.Query["id"].ToString();
     var currentOrganizationId = !string.IsNullOrWhiteSpace(organizationIdFromEvents)
@@ -27,6 +27,13 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>
                 <span>Статистика</span>
             </a>
+        </li>
+        <li class="my-nav-item">
+            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm_org">
+                <a href="#" onclick="document.getElementById('logoutForm_org').submit(); return false;" class="logout-link">
+                    <span>Вийти</span>
+                </a>
+            </form>
         </li>
     </ul>
 </nav>

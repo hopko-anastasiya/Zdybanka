@@ -12,7 +12,7 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayNameFor(model => model.Fullname)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Email)
@@ -24,9 +24,6 @@
                 @Html.DisplayNameFor(model => model.Createdat)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Updatedat)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Status)
             </th>
             <th></th>
@@ -36,7 +33,7 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @Html.DisplayFor(modelItem => item.Fullname)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Email)
@@ -48,10 +45,12 @@
                 @Html.DisplayFor(modelItem => item.Createdat)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Updatedat)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status.Statusname)
+                @{
+                    var statusClass = item.Status.Statusname == "Верифікована" ? "status-planned" :
+                                      item.Status.Statusname == "Не верифікована" ? "status-default" :
+                                      item.Status.Statusname == "Заблокована" ? "status-cancelled" : "status-default";
+                }
+                <span class="status-badge @statusClass">@item.Status.Statusname</span>
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |

@@ -1,0 +1,14 @@
+Name;Email;Description;Status
+Test Org Alpha 20260411;alpha.20260411@example.com;Valid row with explicit status;Не верифікована
+;no-name@example.com;Missing name should fail;Верифікована
+Test Org No Email 20260411;;Missing email should fail;Верифікована
+Test Org Bad Email 20260411;bad-email-format;Invalid email should fail;Верифікована
+Test Org Duplicate Name 20260411;dup-name-first@example.com;First duplicate-name row;Верифікована
+Test Org Duplicate Name 20260411;dup-name-second@example.com;Second duplicate-name row should fail;Верифікована
+Test Org Duplicate Email A 20260411;same-email@example.com;First duplicate-email row;Верифікована
+Test Org Duplicate Email B 20260411;same-email@example.com;Second duplicate-email row should fail;Верифікована
+Test Org Unknown Status 20260411;unknown-status@example.com;Unknown status should fail;Неіснуючий статус
+Test Org Default Status 20260411;default-status@example.com;Empty status should fallback to default;
+Valid Org Delta 20260411 1530;valid.delta.20260411.1530@example.com;Should import successfully with verified status;Верифікована
+Valid Org Epsilon 20260411 1531;valid.epsilon.20260411.1531@example.com;Should import successfully with unverified status;Не верифікована
+Valid Org Zeta 20260411 1532;valid.zeta.20260411.1532@example.com;Should import successfully with pending status;Очікує підтвердження

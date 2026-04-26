@@ -2,81 +2,424 @@
 
 @{
     ViewData["Title"] = "Події";
+    var isAuthenticated = (ViewData["IsAuthenticated"] as bool?) ?? false;
+    var registrationCounts = ViewData["RegistrationCounts"] as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var favoriteCounts = ViewData["FavoriteCounts"] as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var favoriteEventIds = (ViewData["FavoriteEventIds"] as List<int> ?? new List<int>()).ToHashSet();
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+
+    var topEvents = Model
+        .OrderByDescending(e => (registrationCounts.TryGetValue(e.Id, out var registrations) ? registrations : 0)
+            + (favoriteCounts.TryGetValue(e.Id, out var favorites) ? favorites : 0))
+        .ThenBy(e => e.Eventdate)
+        .Take(16)
+        .ToList();
+
+    var categories = Model
+        .Where(e => e.Category != null)
+        .Select(e => e.Category!)
+        .GroupBy(c => c.Id)
+        .Select(group => group.First())
+        .OrderBy(c => c.Categoryname)
+        .ToList();
 }
 
-<div class="d-flex align-items-center mb-3">
-    <h1 class="mb-0">Події</h1>
-    <a asp-action="Create" class="btn btn-primary ms-3" title="Створити нову">+</a>
-</div>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Location)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Eventdate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Createdat)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Updatedat)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Organization)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Location)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Eventdate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Createdat)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Updatedat)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.Categoryname)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Organization.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status.Statusname)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
-            </td>
-        </tr>
+<section class="guest-events-page">
+    <h3>Всі події вашого міста</h3>
+
+    <section class="guest-top-events-section">
+        <div class="guest-top-events-header">
+            <h4>Топ подій</h4>
+        </div>
+
+        <div class="guest-top-carousel-wrap">
+            <button type="button" id="guest-top-prev" class="btn-base guest-carousel-btn" aria-label="Попередня подія">&#10094;</button>
+
+            <div class="guest-top-events-viewport" id="guest-top-viewport">
+                <div class="guest-top-events-track" id="guest-top-track">
+                    @foreach (var item in topEvents)
+                    {
+                        var categoryName = item.Category?.Categoryname ?? "Без категорії";
+                        var registrationsCount = registrationCounts.TryGetValue(item.Id, out var regCount) ? regCount : 0;
+                        var favoritesCount = favoriteCounts.TryGetValue(item.Id, out var favCount) ? favCount : 0;
+
+                        <div class="guest-card-shell guest-top-event-card">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="guest-event-card">
+                                <div class="guest-event-image-wrap">
+                                    <span class="guest-event-category-badge">@categoryName</span>
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="Зображення @item.Title" class="guest-event-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="guest-event-image guest-event-image-placeholder">Немає фото</div>
+                                    }
+                                </div>
+                                <div class="guest-event-content">
+                                    <h5>@item.Title</h5>
+                                    <p>@item.Eventdate?.ToString("dd.MM.yyyy HH:mm")</p>
+                                    <p>@item.Location</p>
+                                    <div class="guest-event-stats">
+                                        <span class="guest-event-stat-item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+                                            @favoritesCount
+                                        </span>
+                                        <span class="guest-event-stat-item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+                                            @registrationsCount
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <button type="button" id="guest-top-next" class="btn-base guest-carousel-btn" aria-label="Наступна подія">&#10095;</button>
+        </div>
+    </section>
+
+    <div class="guest-events-filters">
+        <div class="guest-filter-item">
+            <input id="guest-events-search" type="text" placeholder="Введіть назву події" />
+        </div>
+        <div class="guest-filter-item">
+            <input id="guest-events-date" type="date" />
+        </div>
+        <div class="guest-filter-item">
+            <select id="guest-events-category">
+                <option value="">Усі категорії</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Categoryname</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <section class="guest-all-events-section">
+        <div class="guest-events-grid" id="guest-events-grid">
+            @foreach (var item in Model)
+            {
+                var categoryName = item.Category?.Categoryname ?? "Без категорії";
+                var registrationsCount = registrationCounts.TryGetValue(item.Id, out var regCount) ? regCount : 0;
+                var favoritesCount = favoriteCounts.TryGetValue(item.Id, out var favCount) ? favCount : 0;
+
+                <div class="guest-card-shell guest-list-event-card"
+                     data-title="@item.Title.ToLowerInvariant()"
+                     data-date="@item.Eventdate?.ToString("yyyy-MM-dd")"
+                     data-category="@item.Categoryid">
+                    <a asp-action="Details"
+                       asp-route-id="@item.Id"
+                       class="guest-event-card">
+                        <div class="guest-event-image-wrap">
+                            <span class="guest-event-category-badge">@categoryName</span>
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="Зображення @item.Title" class="guest-event-image" />
+                            }
+                            else
+                            {
+                                <div class="guest-event-image guest-event-image-placeholder">Немає фото</div>
+                            }
+                        </div>
+                        <div class="guest-event-content">
+                            <h5>@item.Title</h5>
+                            <p>@item.Eventdate?.ToString("dd.MM.yyyy HH:mm")</p>
+                            <p>@item.Location</p>
+                            <div class="guest-event-stats">
+                                <span class="guest-event-stat-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+                                    @favoritesCount
+                                </span>
+                                <span class="guest-event-stat-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+                                    @registrationsCount
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    @if (isAuthenticated)
+                    {
+                        <form asp-controller="Userfavorites" asp-action="Toggle" method="post" class="guest-favorite-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="eventId" value="@item.Id" />
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <button type="submit" class="guest-favorite-btn @(favoriteEventIds.Contains(item.Id) ? "is-favorited" : string.Empty)" aria-label="@(favoriteEventIds.Contains(item.Id) ? "Прибрати з уподобаних" : "Уподобати")" aria-pressed="@(favoriteEventIds.Contains(item.Id).ToString().ToLowerInvariant())">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="guest-favorite-icon guest-favorite-icon-outline lucide lucide-heart" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="guest-favorite-icon guest-favorite-icon-filled lucide lucide-heart" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+                            </button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+
+        <p id="guest-events-empty" class="guest-events-empty" style="display:none;">За вашим запитом подій не знайдено.</p>
+    </section>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            const searchInput = document.getElementById('guest-events-search');
+            const dateInput = document.getElementById('guest-events-date');
+            const categorySelect = document.getElementById('guest-events-category');
+            const cards = Array.from(document.querySelectorAll('.guest-list-event-card'));
+            const emptyMessage = document.getElementById('guest-events-empty');
+
+            function filterEvents() {
+                const titleValue = (searchInput?.value || '').trim().toLowerCase();
+                const dateValue = (dateInput?.value || '').trim();
+                const categoryValue = (categorySelect?.value || '').trim();
+
+                let visibleCount = 0;
+
+                cards.forEach((card) => {
+                    const title = card.dataset.title || '';
+                    const date = card.dataset.date || '';
+                    const category = card.dataset.category || '';
+
+                    const isTitleMatch = !titleValue || title.includes(titleValue);
+                    const isDateMatch = !dateValue || date === dateValue;
+                    const isCategoryMatch = !categoryValue || category === categoryValue;
+                    const isVisible = isTitleMatch && isDateMatch && isCategoryMatch;
+
+                    card.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (emptyMessage) {
+                    emptyMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            }
+
+            searchInput?.addEventListener('input', filterEvents);
+            dateInput?.addEventListener('change', filterEvents);
+            categorySelect?.addEventListener('change', filterEvents);
+            filterEvents();
+
+            const topTrack = document.getElementById('guest-top-track');
+            const topViewport = document.getElementById('guest-top-viewport');
+            const prevButton = document.getElementById('guest-top-prev');
+            const nextButton = document.getElementById('guest-top-next');
+            const favoriteForms = Array.from(document.querySelectorAll('.guest-favorite-form'));
+            const carouselStepCards = 4;
+            let autoScrollTimer = null;
+            let isAnimating = false;
+
+            function updateFavoriteButton(button, isFavorited) {
+                button.classList.toggle('is-favorited', isFavorited);
+                button.setAttribute('aria-pressed', isFavorited ? 'true' : 'false');
+                button.setAttribute('aria-label', isFavorited ? 'Прибрати з уподобаних' : 'Уподобати');
+            }
+
+            favoriteForms.forEach((form) => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const button = form.querySelector('.guest-favorite-btn');
+                    if (!button || button.dataset.isSubmitting === 'true') {
+                        return;
+                    }
+
+                    button.dataset.isSubmitting = 'true';
+                    button.disabled = true;
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form),
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Favorite toggle request failed.');
+                        }
+
+                        updateFavoriteButton(button, !button.classList.contains('is-favorited'));
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        button.disabled = false;
+                        button.dataset.isSubmitting = 'false';
+                    }
+                });
+            });
+
+            function getStep() {
+                if (!topTrack || topTrack.children.length === 0) {
+                    return 0;
+                }
+
+                const card = topTrack.children[0];
+                const cardWidth = card.getBoundingClientRect().width;
+                const style = window.getComputedStyle(topTrack);
+                const gap = parseFloat(style.columnGap || style.gap || '0');
+                return cardWidth + gap;
+            }
+
+            function canScrollCarousel() {
+                return !!topTrack && topTrack.children.length > 4;
+            }
+
+            function getStepCards() {
+                if (!topTrack) {
+                    return 0;
+                }
+
+                return Math.min(carouselStepCards, topTrack.children.length);
+            }
+
+            function updateCarouselButtons() {
+                const enabled = canScrollCarousel();
+                if (prevButton) prevButton.disabled = !enabled;
+                if (nextButton) nextButton.disabled = !enabled;
+            }
+
+            function shiftNext() {
+                if (!canScrollCarousel()) {
+                    return;
+                }
+
+                if (isAnimating) {
+                    return;
+                }
+
+                const singleStep = getStep();
+                const cardsStep = getStepCards();
+                if (!singleStep || !cardsStep) {
+                    return;
+                }
+
+                isAnimating = true;
+                topTrack.style.transition = 'transform 0.25s ease';
+                topTrack.style.transform = `translateX(${-singleStep * cardsStep}px)`;
+
+                topTrack.addEventListener('transitionend', () => {
+                    for (let i = 0; i < cardsStep; i += 1) {
+                        const firstCard = topTrack.firstElementChild;
+                        if (firstCard) {
+                            topTrack.appendChild(firstCard);
+                        }
+                    }
+
+                    topTrack.style.transition = 'none';
+                    topTrack.style.transform = 'translateX(0)';
+                    void topTrack.offsetHeight;
+                    isAnimating = false;
+                }, { once: true });
+            }
+
+            function shiftPrev() {
+                if (!canScrollCarousel()) {
+                    return;
+                }
+
+                if (isAnimating) {
+                    return;
+                }
+
+                const singleStep = getStep();
+                const cardsStep = getStepCards();
+                if (!singleStep || !cardsStep) {
+                    return;
+                }
+
+                isAnimating = true;
+
+                for (let i = 0; i < cardsStep; i += 1) {
+                    const lastCard = topTrack.lastElementChild;
+                    if (lastCard) {
+                        topTrack.insertBefore(lastCard, topTrack.firstElementChild);
+                    }
+                }
+
+                topTrack.style.transition = 'none';
+                topTrack.style.transform = `translateX(${-singleStep * cardsStep}px)`;
+                void topTrack.offsetHeight;
+                topTrack.style.transition = 'transform 0.25s ease';
+                topTrack.style.transform = 'translateX(0)';
+
+                topTrack.addEventListener('transitionend', () => {
+                    isAnimating = false;
+                }, { once: true });
+            }
+
+            function resetCarouselPosition() {
+                if (!topTrack) {
+                    return;
+                }
+
+                topTrack.style.transition = 'none';
+                topTrack.style.transform = 'translateX(0)';
+            }
+
+            prevButton?.addEventListener('click', () => {
+                shiftPrev();
+                restartAutoScroll();
+            });
+
+            nextButton?.addEventListener('click', () => {
+                shiftNext();
+                restartAutoScroll();
+            });
+
+            function startAutoScroll() {
+                if (!canScrollCarousel()) {
+                    return;
+                }
+
+                stopAutoScroll();
+                autoScrollTimer = setInterval(() => {
+                    shiftNext();
+                }, 6000);
+            }
+
+            function stopAutoScroll() {
+                if (autoScrollTimer) {
+                    clearInterval(autoScrollTimer);
+                    autoScrollTimer = null;
+                }
+            }
+
+            function restartAutoScroll() {
+                stopAutoScroll();
+                startAutoScroll();
+            }
+
+            topViewport?.addEventListener('mouseenter', stopAutoScroll);
+            topViewport?.addEventListener('mouseleave', startAutoScroll);
+            prevButton?.addEventListener('mouseenter', stopAutoScroll);
+            prevButton?.addEventListener('mouseleave', startAutoScroll);
+            nextButton?.addEventListener('mouseenter', stopAutoScroll);
+            nextButton?.addEventListener('mouseleave', startAutoScroll);
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopAutoScroll();
+                } else {
+                    startAutoScroll();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                resetCarouselPosition();
+                updateCarouselButtons();
+                restartAutoScroll();
+            });
+
+            resetCarouselPosition();
+            updateCarouselButtons();
+            startAutoScroll();
+        })();
+    </script>
 }
-    </tbody>
-</table>

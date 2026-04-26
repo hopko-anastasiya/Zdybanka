@@ -1,0 +1,2 @@
+Company;MailAddress;Description;State
+Wrong Header Org 1;wrong1@example.com;Should fail because required header aliases are missing;Верифікована

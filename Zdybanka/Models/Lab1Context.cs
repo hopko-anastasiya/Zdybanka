@@ -42,6 +42,8 @@ public partial class Lab1Context : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresEnum<UserRole>("user_role");
+
         modelBuilder.Entity<Changeshistory>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("changeshistory_pkey");
@@ -80,6 +82,8 @@ public partial class Lab1Context : DbContext
             entity.Property(e => e.Eventdate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("eventdate");
+            entity.Property(e => e.ImageUrl)
+                .HasColumnName("image_url");
             entity.Property(e => e.Location)
                 .HasMaxLength(255)
                 .HasColumnName("location");
@@ -135,27 +139,10 @@ public partial class Lab1Context : DbContext
 
         modelBuilder.Entity<Organization>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("organization_pkey");
-
             entity.ToTable("organization");
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Createdat)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .HasColumnName("email");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
             entity.Property(e => e.Statusid).HasColumnName("statusid");
-            entity.Property(e => e.Updatedat)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Status).WithMany(p => p.Organizations)
                 .HasForeignKey(d => d.Statusid)
@@ -219,6 +206,11 @@ public partial class Lab1Context : DbContext
             entity.Property(e => e.Fullname)
                 .HasMaxLength(255)
                 .HasColumnName("fullname");
+            entity.Property(e => e.PasswordHash)
+                .HasColumnName("password_hash");
+            entity.Property(e => e.Role)
+                .HasColumnType("user_role")
+                .HasColumnName("role");
         });
 
         modelBuilder.Entity<Userfavorite>(entity =>
@@ -258,9 +250,19 @@ public partial class Lab1Context : DbContext
         {
             foreach (var prop in entry.Properties.Where(p => p.Metadata.ClrType == typeof(DateTime) || p.Metadata.ClrType == typeof(DateTime?)))
             {
+                if (prop.Metadata.Name == "Updatedat")
+                {
+                    continue;
+                }
+
                 if (prop.CurrentValue is DateTime dt)
                 {
-                    prop.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                    prop.CurrentValue = dt.Kind switch
+                    {
+                        DateTimeKind.Local => dt.ToUniversalTime(),
+                        DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+                        _ => dt
+                    };
                 }
             }
         }
@@ -317,4 +319,5 @@ public partial class Lab1Context : DbContext
         // 3. Збереження
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
-    }
+
+}
